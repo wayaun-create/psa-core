@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const { pool } = require("./db");
+const { openai } = require("@ai-sdk/openai");
+const { generateText } = require("ai");
 
 const app = express();
 app.use(express.json());
@@ -238,106 +240,75 @@ app.post("/api/chat", async (req, res) => {
   }
   
   try {
-    const lowerMsg = message.toLowerCase();
-    let response = '';
+    // Get user's parcel data for context
+    const parcelsResult = await pool.query(
+      `SELECT p.parcel_id, p.map_parcel, p.def, p.file__, p.county, 
+              ts.tax_sale_name, ts.sale_date, ts.county as tax_sale_county
+       FROM parcels p
+       INNER JOIN tax_sales ts ON p.tax_sale_id = ts.tax_sale_id
+       INNER JOIN clients c ON ts.client_id = c.client_id
+       WHERE c.acct_id = $1
+       LIMIT 500`,
+      [acct_id]
+    );
     
-    // Count queries
-    if (lowerMsg.includes('how many') || lowerMsg.includes('count')) {
-      // Check what they're counting
-      if (lowerMsg.includes('parcel')) {
-        const result = await pool.query(
-          `SELECT COUNT(*) as count FROM parcels p
-           INNER JOIN tax_sales ts ON p.tax_sale_id = ts.tax_sale_id
-           INNER JOIN clients c ON ts.client_id = c.client_id
-           WHERE c.acct_id = $1`,
-          [acct_id]
-        );
-        response = `You have ${result.rows[0].count} total parcels.`;
-      } else if (lowerMsg.includes('tax sale')) {
-        const result = await pool.query(
-          `SELECT COUNT(*) as count FROM tax_sales ts
-           INNER JOIN clients c ON ts.client_id = c.client_id
-           WHERE c.acct_id = $1`,
-          [acct_id]
-        );
-        response = `You have ${result.rows[0].count} tax sales.`;
-      }
-      
-      // County-specific count
-      const countyMatch = lowerMsg.match(/in ([a-z]+) county/i);
-      if (countyMatch) {
-        const county = countyMatch[1];
-        const result = await pool.query(
-          `SELECT COUNT(*) as count FROM parcels p
-           INNER JOIN tax_sales ts ON p.tax_sale_id = ts.tax_sale_id
-           INNER JOIN clients c ON ts.client_id = c.client_id
-           WHERE c.acct_id = $1 AND LOWER(p.county) = LOWER($2)`,
-          [acct_id, county]
-        );
-        response = `You have ${result.rows[0].count} parcels in ${county.charAt(0).toUpperCase() + county.slice(1)} County.`;
-      }
+    // Get tax sales summary
+    const taxSalesResult = await pool.query(
+      `SELECT ts.tax_sale_id, ts.tax_sale_name, ts.sale_date, ts.county,
+              COUNT(p.parcel_id) as parcel_count
+       FROM tax_sales ts
+       INNER JOIN clients c ON ts.client_id = c.client_id
+       LEFT JOIN parcels p ON ts.tax_sale_id = p.tax_sale_id
+       WHERE c.acct_id = $1
+       GROUP BY ts.tax_sale_id, ts.tax_sale_name, ts.sale_date, ts.county`,
+      [acct_id]
+    );
+    
+    const context = `You are a helpful assistant for a property tax sale management system. 
+The user has access to the following data:
+
+TAX SALES:
+${taxSalesResult.rows.map(ts => 
+  `- Tax Sale ${ts.tax_sale_id}: ${ts.tax_sale_name} (${ts.county || 'Unknown County'}, ${ts.sale_date ? new Date(ts.sale_date).toLocaleDateString() : 'No date'}) - ${ts.parcel_count} parcels`
+).join('\n')}
+
+TOTAL PARCELS: ${parcelsResult.rows.length}
+
+Sample parcels (showing first 20):
+${parcelsResult.rows.slice(0, 20).map(p => 
+  `- Parcel ${p.parcel_id}: ${p.map_parcel || 'N/A'} in ${p.county || 'Unknown County'}, Defendant: ${p.def || 'N/A'}, File: ${p.file__ || 'N/A'}`
+).join('\n')}
+
+Answer the user's question about their parcels. Be concise and helpful. Use HTML line breaks (<br>) for formatting.`;
+
+    // Check if OpenAI API key is configured
+    if (!process.env.OPENAI_API_KEY) {
+      // Fallback to simple keyword matching if no API key
+      return res.json({ 
+        success: true, 
+        response: `AI chat requires an OPENAI_API_KEY environment variable. Please add it to enable intelligent responses.<br><br>You have ${parcelsResult.rows.length} total parcels across ${taxSalesResult.rows.length} tax sales.`
+      });
     }
+
+    const { text } = await generateText({
+      model: openai("gpt-4o-mini"),
+      messages: [
+        { role: "system", content: context },
+        { role: "user", content: message }
+      ],
+      temperature: 0.7,
+      maxTokens: 500,
+    });
     
-    // Search for specific defendant
-    else if (lowerMsg.includes('defendant') || lowerMsg.includes('show me')) {
-      // Extract potential name from query
-      const nameMatch = lowerMsg.match(/defendant\s+(.+)|show\s+me\s+parcels?\s+(?:with|for)\s+(.+)/i);
-      if (nameMatch) {
-        const searchTerm = (nameMatch[1] || nameMatch[2]).trim();
-        const result = await pool.query(
-          `SELECT p.parcel_id, p.map_parcel, p.def, p.file__, ts.tax_sale_name
-           FROM parcels p
-           INNER JOIN tax_sales ts ON p.tax_sale_id = ts.tax_sale_id
-           INNER JOIN clients c ON ts.client_id = c.client_id
-           WHERE c.acct_id = $1 AND LOWER(p.def) LIKE LOWER($2)
-           LIMIT 10`,
-          [acct_id, `%${searchTerm}%`]
-        );
-        
-        if (result.rows.length > 0) {
-          response = `Found ${result.rows.length} parcel(s):<br>` + 
-            result.rows.map(p => 
-              `• ${p.map_parcel || 'N/A'} - ${p.def || 'No defendant'} (File: ${p.file__ || 'N/A'})`
-            ).join('<br>');
-        } else {
-          response = `No parcels found matching "${searchTerm}".`;
-        }
-      }
-    }
-    
-    // Search by tax sale ID
-    else if (lowerMsg.match(/tax sale\s+(\d+)/i)) {
-      const taxSaleMatch = lowerMsg.match(/tax sale\s+(\d+)/i);
-      const taxSaleId = taxSaleMatch[1];
-      const result = await pool.query(
-        `SELECT COUNT(*) as count, ts.tax_sale_name
-         FROM parcels p
-         INNER JOIN tax_sales ts ON p.tax_sale_id = ts.tax_sale_id
-         INNER JOIN clients c ON ts.client_id = c.client_id
-         WHERE c.acct_id = $1 AND ts.tax_sale_id = $2
-         GROUP BY ts.tax_sale_name`,
-        [acct_id, taxSaleId]
-      );
-      
-      if (result.rows.length > 0) {
-        response = `Tax Sale ${taxSaleId} (${result.rows[0].tax_sale_name}) has ${result.rows[0].count} parcels.`;
-      } else {
-        response = `No parcels found for tax sale ${taxSaleId}.`;
-      }
-    }
-    
-    // Default response
-    if (!response) {
-      response = `I can help you with:<br>
-        • Counting parcels (e.g., "How many parcels in Butts County?")<br>
-        • Finding defendants (e.g., "Show me parcels with defendant Smith")<br>
-        • Tax sale information (e.g., "What parcels are in tax sale 99?")`;
-    }
-    
-    res.json({ success: true, response });
+    res.json({ success: true, response: text });
   } catch (e) {
     console.error('Chat error:', e);
-    res.status(500).json({ success: false, error: e.message });
+    
+    // Fallback response
+    res.json({ 
+      success: true, 
+      response: "I'm having trouble processing your request. Please try asking about parcel counts, tax sales, or specific defendants."
+    });
   }
 });
 
