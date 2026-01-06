@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PSA Core</title>
+    <title>PSA Core - Login</title>
     <style>
         * {
             margin: 0;
@@ -26,7 +26,7 @@
             padding: 40px;
             border-radius: 16px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 600px;
+            max-width: 450px;
             width: 100%;
         }
         
@@ -34,76 +34,76 @@
             color: #333;
             margin-bottom: 10px;
             font-size: 2.5rem;
+            text-align: center;
         }
         
         .subtitle {
             color: #666;
             margin-bottom: 30px;
             font-size: 1.1rem;
+            text-align: center;
         }
         
-        .status {
-            padding: 15px;
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            color: #374151;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .alert {
+            padding: 12px 16px;
             border-radius: 8px;
             margin-bottom: 20px;
-            font-weight: 500;
+            font-size: 0.95rem;
+            display: none;
         }
         
-        .status.loading {
-            background: #fef3c7;
-            color: #92400e;
-        }
-        
-        .status.success {
-            background: #d1fae5;
-            color: #065f46;
-        }
-        
-        .status.error {
+        .alert.error {
             background: #fee2e2;
             color: #991b1b;
+            border: 1px solid #fecaca;
         }
         
-        .info-grid {
-            display: grid;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .info-item {
-            padding: 15px;
-            background: #f9fafb;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-        }
-        
-        .info-label {
-            font-size: 0.875rem;
-            color: #6b7280;
-            margin-bottom: 5px;
-        }
-        
-        .info-value {
-            font-size: 1.1rem;
-            color: #111827;
-            font-weight: 500;
-            word-break: break-all;
+        .alert.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
         }
         
         button {
             background: #667eea;
             color: white;
             border: none;
-            padding: 12px 24px;
+            padding: 14px 24px;
             border-radius: 8px;
             font-size: 1rem;
             cursor: pointer;
             font-weight: 600;
             transition: background 0.2s;
-            margin-top: 20px;
+            width: 100%;
         }
         
-        button:hover {
+        button:hover:not(:disabled) {
             background: #5568d3;
         }
         
@@ -115,81 +115,84 @@
 </head>
 <body>
     <div class="container">
-        <h1>🚀 PSA Core</h1>
-        <p class="subtitle">API Connection Dashboard</p>
+        <h1>� PSA Core</h1>
+        <p class="subtitle">Professional Services Automation</p>
         
-        <div id="status" class="status loading">
-            Connecting to API...
-        </div>
+        <div id="alert" class="alert"></div>
         
-        <div id="info" class="info-grid" style="display: none;"></div>
-        
-        <button onclick="testConnection()" id="testBtn">Test Connection</button>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required autocomplete="email">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required autocomplete="current-password">
+            </div>
+            
+            <button type="submit" id="loginBtn">Sign In</button>
+        </form>
     </div>
 
     <script>
-        // API endpoints - update with your Render API URL
         const API_BASE = window.location.hostname === 'localhost' 
             ? window.location.origin 
             : 'https://psa-core-api.onrender.com';
 
-        const statusEl = document.getElementById('status');
-        const infoEl = document.getElementById('info');
-        const testBtn = document.getElementById('testBtn');
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const alertEl = document.getElementById('alert');
 
-        function updateStatus(message, type) {
-            statusEl.textContent = message;
-            statusEl.className = `status ${type}`;
+        function showAlert(message, type) {
+            alertEl.textContent = message;
+            alertEl.className = `alert ${type}`;
+            alertEl.style.display = 'block';
         }
 
-        function showInfo(data) {
-            infoEl.style.display = 'grid';
-            infoEl.innerHTML = Object.entries(data).map(([key, value]) => `
-                <div class="info-item">
-                    <div class="info-label">${key}</div>
-                    <div class="info-value">${value}</div>
-                </div>
-            `).join('');
+        function hideAlert() {
+            alertEl.style.display = 'none';
         }
 
-        async function testConnection() {
-            testBtn.disabled = true;
-            updateStatus('Testing connection...', 'loading');
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideAlert();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Signing in...';
             
             try {
-                // Test root endpoint
-                const rootResponse = await fetch(`${API_BASE}/api`);
-                const rootText = await rootResponse.text();
+                const response = await fetch(`${API_BASE}/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
                 
-                // Test database endpoint
-                const dbResponse = await fetch(`${API_BASE}/api/db-test`);
-                const dbData = await dbResponse.json();
+                const data = await response.json();
                 
-                if (dbData.ok) {
-                    updateStatus('✅ Connected successfully!', 'success');
-                    showInfo({
-                        'API Status': rootText,
-                        'Database': 'Connected',
-                        'Server Time': new Date(dbData.now).toLocaleString(),
-                        'API Endpoint': API_BASE
-                    });
+                if (data.success) {
+                    showAlert('✅ Login successful! Welcome back.', 'success');
+                    // Store account info and redirect
+                    localStorage.setItem('acct_id', data.acct_id);
+                    setTimeout(() => {
+                        window.location.href = '/dashboard.html';
+                    }, 1000);
                 } else {
-                    throw new Error(dbData.error || 'Unknown error');
+                    showAlert(data.error || 'Invalid email or password', 'error');
                 }
             } catch (error) {
-                updateStatus(`❌ Connection failed: ${error.message}`, 'error');
-                showInfo({
-                    'Error': error.message,
-                    'API Endpoint': API_BASE,
-                    'Suggestion': 'Check if your API is running and database is configured'
-                });
+                showAlert('Connection error. Please try again.', 'error');
+                console.error('Login error:', error);
             } finally {
-                testBtn.disabled = false;
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Sign In';
             }
-        }
-
-        // Test connection on load
-        window.addEventListener('load', testConnection);
+        });
     </script>
 </body>
 </html>
