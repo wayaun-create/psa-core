@@ -2,8 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const { pool } = require("./db");
-const { openai } = require("@ai-sdk/openai");
-const { generateText } = require("ai");
+const OpenAI = require("openai");
 
 const app = express();
 app.use(express.json());
@@ -264,6 +263,19 @@ app.post("/api/chat", async (req, res) => {
       [acct_id]
     );
     
+    // Check if OpenAI API key is configured
+    if (!process.env.OPENAI_API_KEY) {
+      // Fallback to simple keyword matching if no API key
+      return res.json({ 
+        success: true, 
+        response: `AI chat requires an OPENAI_API_KEY environment variable. Please add it to enable intelligent responses.<br><br>You have ${parcelsResult.rows.length} total parcels across ${taxSalesResult.rows.length} tax sales.`
+      });
+    }
+
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
+    });
+
     const context = `You are a helpful assistant for a property tax sale management system. 
 The user has access to the following data:
 
@@ -281,26 +293,18 @@ ${parcelsResult.rows.slice(0, 20).map(p =>
 
 Answer the user's question about their parcels. Be concise and helpful. Use HTML line breaks (<br>) for formatting.`;
 
-    // Check if OpenAI API key is configured
-    if (!process.env.OPENAI_API_KEY) {
-      // Fallback to simple keyword matching if no API key
-      return res.json({ 
-        success: true, 
-        response: `AI chat requires an OPENAI_API_KEY environment variable. Please add it to enable intelligent responses.<br><br>You have ${parcelsResult.rows.length} total parcels across ${taxSalesResult.rows.length} tax sales.`
-      });
-    }
-
-    const { text } = await generateText({
-      model: openai("gpt-4o-mini"),
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: context },
         { role: "user", content: message }
       ],
       temperature: 0.7,
-      maxTokens: 500,
+      max_tokens: 500,
     });
     
-    res.json({ success: true, response: text });
+    const aiResponse = completion.choices[0].message.content;
+    res.json({ success: true, response: aiResponse });
   } catch (e) {
     console.error('Chat error:', e);
     
