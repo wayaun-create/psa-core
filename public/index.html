@@ -128,8 +128,10 @@
     </div>
 
     <script>
-        // API endpoints are relative - will work on same server
-        const API_BASE = window.location.origin;
+        // API endpoints - update with your Render API URL
+        const API_BASE = window.location.hostname === 'localhost' 
+            ? window.location.origin 
+            : 'https://psa-core-api.onrender.com';
 
         const statusEl = document.getElementById('status');
         const infoEl = document.getElementById('info');
