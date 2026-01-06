@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parcel Details - PSA Core</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f3f4f6;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.75rem;
+        }
+        
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 8px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        
+        .back-btn:hover {
+            background: white;
+            color: #667eea;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .title-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .title-section h2 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .field-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #667eea;
+        }
+        
+        .field-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .field-value {
+            color: #111827;
+            font-size: 1rem;
+            word-break: break-word;
+            line-height: 1.5;
+        }
+        
+        .loading {
+            padding: 60px;
+            text-align: center;
+            color: #6b7280;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .error {
+            padding: 60px;
+            text-align: center;
+            color: #ef4444;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📄 Parcel Details</h1>
+        <button class="back-btn" onclick="history.back()">← Back</button>
+    </div>
+    
+    <div class="container">
+        <div class="title-section">
+            <h2 id="parcelTitle">Loading parcel details...</h2>
+        </div>
+        
+        <div id="detailsContainer" class="details-grid">
+            <div class="loading">Loading...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.hostname === 'localhost' 
+            ? window.location.origin 
+            : 'https://psa-core-api.onrender.com';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const parcelId = urlParams.get('parcelId');
+
+        if (!parcelId) {
+            window.location.href = '/dashboard.html';
+        }
+
+        // Convert field names to readable labels
+        function formatFieldName(fieldName) {
+            return fieldName
+                .replace(/_/g, ' ')
+                .replace(/\b\w/g, l => l.toUpperCase())
+                .replace(/  +/g, ' - ')
+                .trim();
+        }
+
+        async function loadParcelDetails() {
+            try {
+                const response = await fetch(`${API_BASE}/api/parcel/${parcelId}`);
+                const data = await response.json();
+                
+                const container = document.getElementById('detailsContainer');
+                
+                if (data.success && data.parcel) {
+                    const parcel = data.parcel;
+                    
+                    // Update title
+                    document.getElementById('parcelTitle').textContent = 
+                        `Parcel: ${parcel.map_parcel || parcel.parcel_id || 'Unknown'}`;
+                    
+                    // Create field cards
+                    const fields = Object.entries(parcel)
+                        .sort(([a], [b]) => a.localeCompare(b));
+                    
+                    if (fields.length > 0) {
+                        container.innerHTML = fields.map(([key, value]) => `
+                            <div class="field-card">
+                                <div class="field-label">${formatFieldName(key)}</div>
+                                <div class="field-value">${value || '-'}</div>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<div class="loading">No data available for this parcel</div>';
+                    }
+                } else {
+                    container.innerHTML = `<div class="error">${data.error || 'Parcel not found'}</div>`;
+                }
+            } catch (error) {
+                console.error('Error loading parcel details:', error);
+                document.getElementById('detailsContainer').innerHTML = 
+                    '<div class="error">Error loading parcel details</div>';
+            }
+        }
+
+        window.addEventListener('load', loadParcelDetails);
+    </script>
+</body>
+</html>

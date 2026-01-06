@@ -100,6 +100,66 @@
             font-size: 2rem;
             font-weight: 700;
         }
+        
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+        }
+        
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        .tax-sale-list {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .tax-sale-btn {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-left: 4px solid #667eea;
+            padding: 16px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            font-size: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .tax-sale-btn:hover {
+            background: #f3f4f6;
+            border-color: #667eea;
+            transform: translateX(4px);
+        }
+        
+        .tax-sale-info {
+            flex-grow: 1;
+        }
+        
+        .tax-sale-name {
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+        
+        .tax-sale-meta {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        
+        .tax-sale-arrow {
+            color: #667eea;
+            font-size: 1.5rem;
+        }
     </style>
 </head>
 <body>
@@ -126,6 +186,13 @@
             <div class="stat-card">
                 <h3>Total Parcels</h3>
                 <div class="value" id="parcelCount">-</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>Tax Sales</h2>
+            <div id="taxSaleList" class="tax-sale-list">
+                <p style="color: #6b7280;">Loading tax sales...</p>
             </div>
         </div>
     </div>
@@ -161,9 +228,47 @@
                 } else {
                     logout();
                 }
+                
+                // Load tax sales
+                await loadTaxSales();
             } catch (error) {
                 console.error('Error loading dashboard:', error);
             }
+        }
+
+        async function loadTaxSales() {
+            try {
+                const response = await fetch(`${API_BASE}/api/tax-sales/${acctId}`);
+                const data = await response.json();
+                
+                const taxSaleList = document.getElementById('taxSaleList');
+                
+                if (data.success && data.taxSales.length > 0) {
+                    taxSaleList.innerHTML = data.taxSales.map(ts => `
+                        <button class="tax-sale-btn" onclick="viewParcels('${ts.tax_sale_id}', '${ts.tax_sale_name || 'Tax Sale'}')">
+                            <div class="tax-sale-info">
+                                <div class="tax-sale-name">${ts.tax_sale_name || 'Untitled Tax Sale'}</div>
+                                <div class="tax-sale-meta">
+                                    ${ts.sale_date ? new Date(ts.sale_date).toLocaleDateString() : 'No date'} 
+                                    ${ts.county ? '• ' + ts.county : ''}
+                                    ${ts.status ? '• ' + ts.status : ''}
+                                </div>
+                            </div>
+                            <div class="tax-sale-arrow">→</div>
+                        </button>
+                    `).join('');
+                } else {
+                    taxSaleList.innerHTML = '<p style="color: #6b7280;">No tax sales found</p>';
+                }
+            } catch (error) {
+                console.error('Error loading tax sales:', error);
+                document.getElementById('taxSaleList').innerHTML = 
+                    '<p style="color: #ef4444;">Error loading tax sales</p>';
+            }
+        }
+
+        function viewParcels(taxSaleId, taxSaleName) {
+            window.location.href = `/parcels.html?taxSaleId=${taxSaleId}&name=${encodeURIComponent(taxSaleName)}`;
         }
 
         window.addEventListener('load', loadDashboard);

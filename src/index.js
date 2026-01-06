@@ -130,5 +130,95 @@ app.get("/api/dashboard/:acctId", async (req, res) => {
   }
 });
 
+app.get("/api/tax-sales/:acctId", async (req, res) => {
+  if (!pool) {
+    return res.status(503).json({ 
+      success: false, 
+      error: "Database not configured" 
+    });
+  }
+  
+  const { acctId } = req.params;
+  
+  try {
+    const result = await pool.query(
+      `SELECT ts.tax_sale_id, ts.tax_sale_name, ts.sale_date, ts.county, ts.status
+       FROM tax_sales ts
+       INNER JOIN clients c ON ts.client_id = c.client_id
+       WHERE c.acct_id = $1
+       ORDER BY ts.sale_date DESC`,
+      [acctId]
+    );
+    
+    res.json({ success: true, taxSales: result.rows });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+app.get("/api/parcels/:taxSaleId", async (req, res) => {
+  if (!pool) {
+    return res.status(503).json({ 
+      success: false, 
+      error: "Database not configured" 
+    });
+  }
+  
+  const { taxSaleId } = req.params;
+  
+  try {
+    const result = await pool.query(
+      `SELECT parcel_id, file__, map_parcel, def
+       FROM parcels
+       WHERE tax_sale_id = $1
+       ORDER BY parcel_id`,
+      [taxSaleId]
+    );
+    
+    res.json({ success: true, parcels: result.rows });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+app.get("/api/parcel/:parcelId", async (req, res) => {
+  if (!pool) {
+    return res.status(503).json({ 
+      success: false, 
+      error: "Database not configured" 
+    });
+  }
+  
+  const { parcelId } = req.params;
+  
+  try {
+    const result = await pool.query(
+      "SELECT * FROM parcels WHERE parcel_id = $1",
+      [parcelId]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: "Parcel not found" 
+      });
+    }
+    
+    // Filter out null/empty fields
+    const parcel = result.rows[0];
+    const filteredParcel = {};
+    
+    for (const [key, value] of Object.entries(parcel)) {
+      if (value !== null && value !== '') {
+        filteredParcel[key] = value;
+      }
+    }
+    
+    res.json({ success: true, parcel: filteredParcel });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Listening on ${port}`));

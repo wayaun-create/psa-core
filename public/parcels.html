@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parcels - PSA Core</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f3f4f6;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.75rem;
+        }
+        
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 8px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        
+        .back-btn:hover {
+            background: white;
+            color: #667eea;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .title-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .title-section h2 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .title-section p {
+            color: #6b7280;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: #f9fafb;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        th {
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        tbody tr:hover {
+            background: #f9fafb;
+        }
+        
+        td {
+            padding: 16px;
+            color: #374151;
+        }
+        
+        .no-data {
+            padding: 60px;
+            text-align: center;
+            color: #6b7280;
+        }
+        
+        .loading {
+            padding: 60px;
+            text-align: center;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📋 Parcels</h1>
+        <a href="/dashboard.html" class="back-btn">← Back to Dashboard</a>
+    </div>
+    
+    <div class="container">
+        <div class="title-section">
+            <h2 id="taxSaleName">Loading...</h2>
+            <p id="parcelCount">-</p>
+        </div>
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>File #</th>
+                        <th>Map/Parcel</th>
+                        <th>Defendant</th>
+                    </tr>
+                </thead>
+                <tbody id="parcelTableBody">
+                    <tr>
+                        <td colspan="3" class="loading">Loading parcels...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.hostname === 'localhost' 
+            ? window.location.origin 
+            : 'https://psa-core-api.onrender.com';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const taxSaleId = urlParams.get('taxSaleId');
+        const taxSaleName = urlParams.get('name');
+
+        if (!taxSaleId) {
+            window.location.href = '/dashboard.html';
+        }
+
+        document.getElementById('taxSaleName').textContent = taxSaleName || 'Tax Sale';
+
+        async function loadParcels() {
+            try {
+                const response = await fetch(`${API_BASE}/api/parcels/${taxSaleId}`);
+                const data = await response.json();
+                
+                const tbody = document.getElementById('parcelTableBody');
+                
+                if (data.success && data.parcels.length > 0) {
+                    document.getElementById('parcelCount').textContent = 
+                        `${data.parcels.length} parcel${data.parcels.length !== 1 ? 's' : ''}`;
+                    
+                    tbody.innerHTML = data.parcels.map(parcel => `
+                        <tr onclick="viewParcel('${parcel.parcel_id}')">
+                            <td>${parcel.file__ || '-'}</td>
+                            <td>${parcel.map_parcel || '-'}</td>
+                            <td>${parcel.def || '-'}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    document.getElementById('parcelCount').textContent = 'No parcels';
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="3" class="no-data">No parcels found for this tax sale</td>
+                        </tr>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading parcels:', error);
+                document.getElementById('parcelTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="3" class="no-data" style="color: #ef4444;">Error loading parcels</td>
+                    </tr>
+                `;
+            }
+        }
+
+        function viewParcel(parcelId) {
+            window.location.href = `/parcel.html?parcelId=${parcelId}`;
+        }
+
+        window.addEventListener('load', loadParcels);
+    </script>
+</body>
+</html>
