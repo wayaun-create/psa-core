@@ -220,5 +220,126 @@ app.get("/api/parcel/:parcelId", async (req, res) => {
   }
 });
 
+app.post("/api/chat", async (req, res) => {
+  if (!pool) {
+    return res.status(503).json({ 
+      success: false, 
+      error: "Database not configured" 
+    });
+  }
+  
+  const { message, acct_id } = req.body;
+  
+  if (!message || !acct_id) {
+    return res.status(400).json({ 
+      success: false, 
+      error: "Message and account ID are required" 
+    });
+  }
+  
+  try {
+    const lowerMsg = message.toLowerCase();
+    let response = '';
+    
+    // Count queries
+    if (lowerMsg.includes('how many') || lowerMsg.includes('count')) {
+      // Check what they're counting
+      if (lowerMsg.includes('parcel')) {
+        const result = await pool.query(
+          `SELECT COUNT(*) as count FROM parcels p
+           INNER JOIN tax_sales ts ON p.tax_sale_id = ts.tax_sale_id
+           INNER JOIN clients c ON ts.client_id = c.client_id
+           WHERE c.acct_id = $1`,
+          [acct_id]
+        );
+        response = `You have ${result.rows[0].count} total parcels.`;
+      } else if (lowerMsg.includes('tax sale')) {
+        const result = await pool.query(
+          `SELECT COUNT(*) as count FROM tax_sales ts
+           INNER JOIN clients c ON ts.client_id = c.client_id
+           WHERE c.acct_id = $1`,
+          [acct_id]
+        );
+        response = `You have ${result.rows[0].count} tax sales.`;
+      }
+      
+      // County-specific count
+      const countyMatch = lowerMsg.match(/in ([a-z]+) county/i);
+      if (countyMatch) {
+        const county = countyMatch[1];
+        const result = await pool.query(
+          `SELECT COUNT(*) as count FROM parcels p
+           INNER JOIN tax_sales ts ON p.tax_sale_id = ts.tax_sale_id
+           INNER JOIN clients c ON ts.client_id = c.client_id
+           WHERE c.acct_id = $1 AND LOWER(p.county) = LOWER($2)`,
+          [acct_id, county]
+        );
+        response = `You have ${result.rows[0].count} parcels in ${county.charAt(0).toUpperCase() + county.slice(1)} County.`;
+      }
+    }
+    
+    // Search for specific defendant
+    else if (lowerMsg.includes('defendant') || lowerMsg.includes('show me')) {
+      // Extract potential name from query
+      const nameMatch = lowerMsg.match(/defendant\s+(.+)|show\s+me\s+parcels?\s+(?:with|for)\s+(.+)/i);
+      if (nameMatch) {
+        const searchTerm = (nameMatch[1] || nameMatch[2]).trim();
+        const result = await pool.query(
+          `SELECT p.parcel_id, p.map_parcel, p.def, p.file__, ts.tax_sale_name
+           FROM parcels p
+           INNER JOIN tax_sales ts ON p.tax_sale_id = ts.tax_sale_id
+           INNER JOIN clients c ON ts.client_id = c.client_id
+           WHERE c.acct_id = $1 AND LOWER(p.def) LIKE LOWER($2)
+           LIMIT 10`,
+          [acct_id, `%${searchTerm}%`]
+        );
+        
+        if (result.rows.length > 0) {
+          response = `Found ${result.rows.length} parcel(s):<br>` + 
+            result.rows.map(p => 
+              `• ${p.map_parcel || 'N/A'} - ${p.def || 'No defendant'} (File: ${p.file__ || 'N/A'})`
+            ).join('<br>');
+        } else {
+          response = `No parcels found matching "${searchTerm}".`;
+        }
+      }
+    }
+    
+    // Search by tax sale ID
+    else if (lowerMsg.match(/tax sale\s+(\d+)/i)) {
+      const taxSaleMatch = lowerMsg.match(/tax sale\s+(\d+)/i);
+      const taxSaleId = taxSaleMatch[1];
+      const result = await pool.query(
+        `SELECT COUNT(*) as count, ts.tax_sale_name
+         FROM parcels p
+         INNER JOIN tax_sales ts ON p.tax_sale_id = ts.tax_sale_id
+         INNER JOIN clients c ON ts.client_id = c.client_id
+         WHERE c.acct_id = $1 AND ts.tax_sale_id = $2
+         GROUP BY ts.tax_sale_name`,
+        [acct_id, taxSaleId]
+      );
+      
+      if (result.rows.length > 0) {
+        response = `Tax Sale ${taxSaleId} (${result.rows[0].tax_sale_name}) has ${result.rows[0].count} parcels.`;
+      } else {
+        response = `No parcels found for tax sale ${taxSaleId}.`;
+      }
+    }
+    
+    // Default response
+    if (!response) {
+      response = `I can help you with:<br>
+        • Counting parcels (e.g., "How many parcels in Butts County?")<br>
+        • Finding defendants (e.g., "Show me parcels with defendant Smith")<br>
+        • Tax sale information (e.g., "What parcels are in tax sale 99?")`;
+    }
+    
+    res.json({ success: true, response });
+  } catch (e) {
+    console.error('Chat error:', e);
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Listening on ${port}`));
