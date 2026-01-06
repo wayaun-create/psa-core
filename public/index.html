@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PSA Core</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .status.loading {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .info-grid {
+            display: grid;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .info-item {
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .info-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 1.1rem;
+            color: #111827;
+            font-weight: 500;
+            word-break: break-all;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+            margin-top: 20px;
+        }
+        
+        button:hover {
+            background: #5568d3;
+        }
+        
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 PSA Core</h1>
+        <p class="subtitle">API Connection Dashboard</p>
+        
+        <div id="status" class="status loading">
+            Connecting to API...
+        </div>
+        
+        <div id="info" class="info-grid" style="display: none;"></div>
+        
+        <button onclick="testConnection()" id="testBtn">Test Connection</button>
+    </div>
+
+    <script>
+        // Configure your API endpoint
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000' 
+            : 'https://your-render-app.onrender.com';
+
+        const statusEl = document.getElementById('status');
+        const infoEl = document.getElementById('info');
+        const testBtn = document.getElementById('testBtn');
+
+        function updateStatus(message, type) {
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+        }
+
+        function showInfo(data) {
+            infoEl.style.display = 'grid';
+            infoEl.innerHTML = Object.entries(data).map(([key, value]) => `
+                <div class="info-item">
+                    <div class="info-label">${key}</div>
+                    <div class="info-value">${value}</div>
+                </div>
+            `).join('');
+        }
+
+        async function testConnection() {
+            testBtn.disabled = true;
+            updateStatus('Testing connection...', 'loading');
+            
+            try {
+                // Test root endpoint
+                const rootResponse = await fetch(`${API_URL}/`);
+                const rootText = await rootResponse.text();
+                
+                // Test database endpoint
+                const dbResponse = await fetch(`${API_URL}/db-test`);
+                const dbData = await dbResponse.json();
+                
+                if (dbData.ok) {
+                    updateStatus('✅ Connected successfully!', 'success');
+                    showInfo({
+                        'API Status': rootText,
+                        'Database': 'Connected',
+                        'Server Time': new Date(dbData.now).toLocaleString(),
+                        'API Endpoint': API_URL
+                    });
+                } else {
+                    throw new Error(dbData.error || 'Unknown error');
+                }
+            } catch (error) {
+                updateStatus(`❌ Connection failed: ${error.message}`, 'error');
+                showInfo({
+                    'Error': error.message,
+                    'API Endpoint': API_URL,
+                    'Suggestion': 'Check if your API is running and CORS is enabled'
+                });
+            } finally {
+                testBtn.disabled = false;
+            }
+        }
+
+        // Test connection on load
+        window.addEventListener('load', testConnection);
+    </script>
+</body>
+</html>
