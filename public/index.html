@@ -128,10 +128,8 @@
     </div>
 
     <script>
-        // Configure your API endpoint
-        const API_URL = window.location.hostname === 'localhost' 
-            ? 'http://localhost:3000' 
-            : 'https://your-render-app.onrender.com';
+        // API endpoints are relative - will work on same server
+        const API_BASE = window.location.origin;
 
         const statusEl = document.getElementById('status');
         const infoEl = document.getElementById('info');
@@ -158,11 +156,11 @@
             
             try {
                 // Test root endpoint
-                const rootResponse = await fetch(`${API_URL}/`);
+                const rootResponse = await fetch(`${API_BASE}/api`);
                 const rootText = await rootResponse.text();
                 
                 // Test database endpoint
-                const dbResponse = await fetch(`${API_URL}/db-test`);
+                const dbResponse = await fetch(`${API_BASE}/api/db-test`);
                 const dbData = await dbResponse.json();
                 
                 if (dbData.ok) {
@@ -171,7 +169,7 @@
                         'API Status': rootText,
                         'Database': 'Connected',
                         'Server Time': new Date(dbData.now).toLocaleString(),
-                        'API Endpoint': API_URL
+                        'API Endpoint': API_BASE
                     });
                 } else {
                     throw new Error(dbData.error || 'Unknown error');
@@ -180,8 +178,8 @@
                 updateStatus(`❌ Connection failed: ${error.message}`, 'error');
                 showInfo({
                     'Error': error.message,
-                    'API Endpoint': API_URL,
-                    'Suggestion': 'Check if your API is running and CORS is enabled'
+                    'API Endpoint': API_BASE,
+                    'Suggestion': 'Check if your API is running and database is configured'
                 });
             } finally {
                 testBtn.disabled = false;
