@@ -1,11 +1,10 @@
 {
-  "version": 2,
-  "buildCommand": "echo 'No build needed'",
-  "outputDirectory": "public",
-  "routes": [
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/public/index.html"
     }
   ]
 }
