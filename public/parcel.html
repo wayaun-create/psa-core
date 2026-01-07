@@ -56,12 +56,12 @@
         
         .layout {
             display: grid;
-            grid-template-columns: 2fr 1fr;
+            grid-template-columns: 1fr;
             gap: 20px;
             margin-top: 20px;
         }
         
-        .left-column, .right-column {
+        .left-column {
             display: flex;
             flex-direction: column;
             gap: 20px;
@@ -412,25 +412,6 @@
                             </div>
                         </div>
                         ` : ''}
-                    </div>
-
-                    <div class="right-column">
-                        <!-- Map View Section -->
-                        <div class="section">
-                            <div class="section-header">Map View</div>
-                            <div class="section-content">
-                                <div class="map-container">
-                                    ${address ? `
-                                        <div class="map-address">${escapeHtml(address)}</div>
-                                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}" 
-                                           target="_blank" 
-                                           class="map-link">
-                                           📍 View on Google Maps
-                                        </a>
-                                    ` : '<div>No address available</div>'}
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             `;
