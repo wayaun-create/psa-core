@@ -256,60 +256,53 @@
             const categories = {
                 parcelDetails: {},
                 propertyDescription: {},
+                notes: {},
                 interestedParties: {},
                 mortgageHolders: {},
                 lienIndex: {},
-                bankruptcy: {},
-                notes: {}
+                bankruptcy: {}
             };
 
-            // Process each field
+            // Process each field exactly as shown in screenshot
             for (const [key, value] of Object.entries(parcel)) {
                 if (value === null || value === '') continue;
                 
                 const keyLower = key.toLowerCase();
                 
-                // PARCEL DETAILS (top section)
-                if (['file__', 'map_parcel', 'years_due'].includes(keyLower)) {
+                // PARCEL DETAILS (top section) - FILE #, MAP/PARCEL, YEARS DUE
+                if (keyLower === 'file__' || keyLower === 'map_parcel' || keyLower === 'years_due') {
                     categories.parcelDetails[key] = value;
                 }
-                // PROPERTY DESCRIPTION
-                else if (['legal', 'property_description', 'county', 'land_lot', 'gm_district', 
-                          'in_the_city_of', 'acres', 'tract_lot', 'block', 'subdivision', 
-                          'plat_book', 'plat_page', 'deed_book', 'deed_page', 'known_as'].includes(keyLower)) {
+                // PROPERTY DESCRIPTION - VILLA OR, LEGAL
+                else if (keyLower.includes('villa') || keyLower === 'legal' || 
+                         keyLower === 'property_description') {
                     categories.propertyDescription[key] = value;
                 }
-                // NOTES
-                else if (['notes'].includes(keyLower)) {
+                // NOTES - just notes
+                else if (keyLower === 'notes') {
                     categories.notes[key] = value;
                 }
-                // INTERESTED PARTIES (all DEF fields, OCC, CRH, DN, RA, M fields)
-                else if (keyLower.startsWith('def') || keyLower.startsWith('dn_add') || 
-                         keyLower.startsWith('occ_add') || keyLower.startsWith('crh') ||
-                         keyLower.startsWith('_ra_') || keyLower.startsWith('ra_') ||
-                         keyLower.startsWith('m1') || keyLower.startsWith('m2') || keyLower.startsWith('m3') ||
-                         keyLower.startsWith('pp_owner')) {
+                // INTERESTED PARTIES - DEF, DEF ADD, OCC ADD, M1, M2, etc
+                else if (keyLower.startsWith('def') || keyLower.startsWith('occ_add') ||
+                         keyLower.startsWith('m1') || keyLower.startsWith('m2') || keyLower.startsWith('m3')) {
                     categories.interestedParties[key] = value;
                 }
-                // MORTGAGE HOLDERS (LH1, LH2, LH3, LH4, LH5)
+                // MORTGAGE HOLDERS - LH1, LH2, LH3, etc with all their sub-fields
                 else if (keyLower.startsWith('lh1') || keyLower.startsWith('lh2') || 
                          keyLower.startsWith('lh3') || keyLower.startsWith('lh4') || 
                          keyLower.startsWith('lh5')) {
                     categories.mortgageHolders[key] = value;
                 }
-                // LIEN INDEX (FTL, GTL, DOL, CITY, COL, STL, OTL)
-                else if (['ftl', 'ftl_book_page', 'gtl', 'gtl_book_page', 'dol', 'dol_book_page',
-                          'city', 'city_book_page'].includes(keyLower)) {
+                // LIEN INDEX - FTL, GTL, STL, OTL, DTL, COL
+                else if (keyLower.startsWith('ftl') || keyLower.startsWith('gtl') || 
+                         keyLower.startsWith('stl') || keyLower.startsWith('otl') ||
+                         keyLower.startsWith('dtl') || keyLower.startsWith('col') ||
+                         keyLower.startsWith('dol') || keyLower.startsWith('city')) {
                     categories.lienIndex[key] = value;
                 }
                 // BANKRUPTCY AND PROBATE
-                else if (['bankruptcy', 'bankruptcy_information', 'probate_information', 
-                          'check_probate'].includes(keyLower)) {
+                else if (keyLower.includes('bankruptcy') || keyLower.includes('probate')) {
                     categories.bankruptcy[key] = value;
-                }
-                // Everything else goes to parcel details (bill, account, etc.)
-                else {
-                    categories.parcelDetails[key] = value;
                 }
             }
 
