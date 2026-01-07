@@ -52,33 +52,44 @@
             max-width: 1200px;
             margin: 40px auto;
             padding: 0 20px;
+            margin-bottom: 40px;
         }
         
-        .title-section {
+        .section-card {
             background: white;
-            padding: 30px;
+            padding: 0;
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
+            margin-bottom: 24px;
+            overflow: hidden;
         }
         
-        .title-section h2 {
-            color: #333;
-            margin-bottom: 5px;
+        .section-header {
+            background: #dc2626;
+            color: white;
+            padding: 16px 24px;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
-        .details-grid {
+        .section-content {
+            padding: 24px;
+        }
+        
+        .two-column-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
         }
         
-        .field-card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            border-left: 4px solid #667eea;
+        .field-group {
+            margin-bottom: 20px;
+        }
+        
+        .field-group:last-child {
+            margin-bottom: 0;
         }
         
         .field-label {
@@ -86,33 +97,151 @@
             color: #6b7280;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             font-weight: 600;
         }
         
         .field-value {
             color: #111827;
             font-size: 1rem;
+            line-height: 1.6;
             word-break: break-word;
-            line-height: 1.5;
+        }
+        
+        .field-value.large {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .legal-text {
+            background: #f9fafb;
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid #dc2626;
+            margin-top: 16px;
+        }
+        
+        .notes-textarea {
+            background: #f9fafb;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            min-height: 100px;
+            color: #6b7280;
+            font-style: italic;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+        
+        table th {
+            background: #f9fafb;
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            color: #1f2937;
+            font-size: 0.9rem;
+        }
+        
+        table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        table tr:hover {
+            background: #f9fafb;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #9ca3af;
+            font-style: italic;
         }
         
         .loading {
             padding: 60px;
             text-align: center;
             color: #6b7280;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
         
         .error {
             padding: 60px;
             text-align: center;
             color: #ef4444;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .pagination button {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #374151;
+            transition: all 0.2s;
+        }
+        
+        .pagination button:hover:not(:disabled) {
+            background: #dc2626;
+            color: white;
+            border-color: #dc2626;
+        }
+        
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .pagination .page-info {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+        
+        @media (max-width: 768px) {
+            .two-column-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 0 12px;
+            }
+            
+            .section-content {
+                padding: 16px;
+            }
+            
+            table {
+                font-size: 0.875rem;
+            }
+            
+            table th,
+            table td {
+                padding: 8px 12px;
+            }
         }
     </style>
 </head>
@@ -123,12 +252,10 @@
     </div>
     
     <div class="container">
-        <div class="title-section">
-            <h2 id="parcelTitle">Loading parcel details...</h2>
-        </div>
-        
-        <div id="detailsContainer" class="details-grid">
-            <div class="loading">Loading...</div>
+        <div id="detailsContainer">
+            <div class="section-card">
+                <div class="loading">Loading parcel details...</div>
+            </div>
         </div>
     </div>
 
@@ -144,13 +271,416 @@
             window.location.href = '/dashboard.html';
         }
 
+        // Pagination state
+        let currentPage = 1;
+        const itemsPerPage = 10;
+
         // Convert field names to readable labels
         function formatFieldName(fieldName) {
             return fieldName
                 .replace(/_/g, ' ')
                 .replace(/\b\w/g, l => l.toUpperCase())
-                .replace(/  +/g, ' - ')
                 .trim();
+        }
+
+        // Group fields by category
+        function categorizeFields(parcel) {
+            const categories = {
+                parcelDetails: {},
+                propertyDescription: {},
+                legal: {},
+                notes: {},
+                interestedParties: [],
+                mortgageHolders: [],
+                lienIndex: [],
+                bankruptcy: {},
+                probate: {},
+                preLevyMail: [],
+                other: {}
+            };
+
+            for (const [key, value] of Object.entries(parcel)) {
+                const lowerKey = key.toLowerCase();
+                
+                // Parcel Details (top section)
+                if (['file__', 'map_parcel', 'years_due', 'county', 'parcel_id'].includes(lowerKey)) {
+                    categories.parcelDetails[key] = value;
+                }
+                // Property Description
+                else if (lowerKey.includes('property_desc') || lowerKey === 'prop_desc') {
+                    categories.propertyDescription[key] = value;
+                }
+                // Legal Description
+                else if (lowerKey.includes('legal')) {
+                    categories.legal[key] = value;
+                }
+                // Notes
+                else if (lowerKey.includes('note')) {
+                    categories.notes[key] = value;
+                }
+                // Interested Parties (DEF fields)
+                else if (lowerKey.startsWith('def') || lowerKey.includes('occ_add')) {
+                    categories.interestedParties.push({ type: key, value: value });
+                }
+                // Mortgage Holders (LH fields)
+                else if (lowerKey.startsWith('lh')) {
+                    categories.mortgageHolders.push({ type: key, value: value });
+                }
+                // Lien Index
+                else if (lowerKey.includes('lien')) {
+                    categories.lienIndex.push({ type: key, value: value });
+                }
+                // Bankruptcy
+                else if (lowerKey.includes('bankrupt') || lowerKey.includes('bk')) {
+                    categories.bankruptcy[key] = value;
+                }
+                // Probate
+                else if (lowerKey.includes('probate')) {
+                    categories.probate[key] = value;
+                }
+                // Pre-Levy and Mail
+                else if (lowerKey.includes('letter') || lowerKey.includes('mail') || lowerKey.includes('levy')) {
+                    categories.preLevyMail.push({ type: key, value: value });
+                }
+                // Everything else
+                else {
+                    categories.other[key] = value;
+                }
+            }
+
+            return categories;
+        }
+
+        function renderParcelDetails(data) {
+            const fields = data.parcelDetails;
+            const leftColumn = [];
+            const rightColumn = [];
+
+            // Left column: FILE #, MAP/PARCEL, YEARS DUE
+            if (fields.file__) {
+                leftColumn.push(`
+                    <div class="field-group">
+                        <div class="field-label">File #</div>
+                        <div class="field-value large">${fields.file__}</div>
+                    </div>
+                `);
+            }
+            
+            if (fields.map_parcel) {
+                leftColumn.push(`
+                    <div class="field-group">
+                        <div class="field-label">Map/Parcel</div>
+                        <div class="field-value large">${fields.map_parcel}</div>
+                    </div>
+                `);
+            }
+            
+            if (fields.years_due) {
+                leftColumn.push(`
+                    <div class="field-group">
+                        <div class="field-label">Years Due</div>
+                        <div class="field-value">${fields.years_due}</div>
+                    </div>
+                `);
+            }
+
+            if (fields.county) {
+                leftColumn.push(`
+                    <div class="field-group">
+                        <div class="field-label">County</div>
+                        <div class="field-value">${fields.county}</div>
+                    </div>
+                `);
+            }
+
+            // Right column: MAP VIEW (property address)
+            const address = fields.property_address || fields.map_parcel || 'Property Location';
+            rightColumn.push(`
+                <div class="field-group">
+                    <div class="field-label">Map View</div>
+                    <div class="field-value">${address}</div>
+                </div>
+            `);
+
+            return `
+                <div class="section-card">
+                    <div class="section-header">Parcel Details</div>
+                    <div class="section-content">
+                        <div class="two-column-grid">
+                            <div>${leftColumn.join('')}</div>
+                            <div>${rightColumn.join('')}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderPropertyDescription(data) {
+            const propDesc = Object.values(data.propertyDescription)[0] || '';
+            const legal = Object.values(data.legal)[0] || '';
+            
+            if (!propDesc && !legal) return '';
+
+            let content = '';
+            
+            if (propDesc) {
+                content += `
+                    <div class="field-group">
+                        <div class="field-label">Property Description</div>
+                        <div class="field-value">${propDesc}</div>
+                    </div>
+                `;
+            }
+
+            if (legal) {
+                content += `
+                    <div class="legal-text">
+                        <div class="field-label">Legal Description</div>
+                        <div class="field-value">${legal}</div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="section-card">
+                    <div class="section-header">Property Description</div>
+                    <div class="section-content">${content}</div>
+                </div>
+            `;
+        }
+
+        function renderNotes(data) {
+            const notes = Object.values(data.notes).join('\n') || 'No notes available';
+            
+            return `
+                <div class="section-card">
+                    <div class="section-header">Notes</div>
+                    <div class="section-content">
+                        <div class="notes-textarea">${notes}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderInterestedParties(parties) {
+            if (parties.length === 0) {
+                return `
+                    <div class="section-card">
+                        <div class="section-header">Interested Parties</div>
+                        <div class="section-content">
+                            <div class="empty-state">No interested parties on record</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const rows = parties.map(p => `
+                <tr>
+                    <td>${formatFieldName(p.type)}</td>
+                    <td>${p.value}</td>
+                </tr>
+            `).join('');
+
+            return `
+                <div class="section-card">
+                    <div class="section-header">Interested Parties</div>
+                    <div class="section-content">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Name/Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderMortgageHolders(holders) {
+            if (holders.length === 0) {
+                return `
+                    <div class="section-card">
+                        <div class="section-header">Mortgage Holders</div>
+                        <div class="section-content">
+                            <div class="empty-state">No mortgage holders on record</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const rows = holders.map(h => {
+                // Try to parse if it contains address info
+                const parts = h.value.split(',');
+                const name = parts[0] || h.value;
+                const address = parts.slice(1).join(',').trim() || '-';
+                
+                return `
+                    <tr>
+                        <td>${formatFieldName(h.type)}</td>
+                        <td>${name}</td>
+                        <td>${address}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            return `
+                <div class="section-card">
+                    <div class="section-header">Mortgage Holders</div>
+                    <div class="section-content">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Name</th>
+                                    <th>Address</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderLienIndex(liens) {
+            if (liens.length === 0) {
+                return `
+                    <div class="section-card">
+                        <div class="section-header">Lien Index</div>
+                        <div class="section-content">
+                            <div class="empty-state">No lien information available</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const rows = liens.map(l => `
+                <tr>
+                    <td>${formatFieldName(l.type)}</td>
+                    <td>${l.value}</td>
+                </tr>
+            `).join('');
+
+            return `
+                <div class="section-card">
+                    <div class="section-header">Lien Index</div>
+                    <div class="section-content">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Information</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderBankruptcyAndProbate(bankruptcy, probate) {
+            const hasBankruptcy = Object.keys(bankruptcy).length > 0;
+            const hasProbate = Object.keys(probate).length > 0;
+            
+            if (!hasBankruptcy && !hasProbate) {
+                return `
+                    <div class="section-card">
+                        <div class="section-header">Bankruptcy and Probate</div>
+                        <div class="section-content">
+                            <div class="empty-state">No bankruptcy or probate information</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            let content = '';
+            
+            if (hasBankruptcy) {
+                content += '<div class="field-group"><div class="field-label">Bankruptcy Information</div>';
+                for (const [key, value] of Object.entries(bankruptcy)) {
+                    content += `<div class="field-value">${formatFieldName(key)}: ${value}</div>`;
+                }
+                content += '</div>';
+            }
+
+            if (hasProbate) {
+                content += '<div class="field-group"><div class="field-label">Probate Information</div>';
+                for (const [key, value] of Object.entries(probate)) {
+                    content += `<div class="field-value">${formatFieldName(key)}: ${value}</div>`;
+                }
+                content += '</div>';
+            }
+
+            return `
+                <div class="section-card">
+                    <div class="section-header">Bankruptcy and Probate</div>
+                    <div class="section-content">${content}</div>
+                </div>
+            `;
+        }
+
+        function renderPreLevyMail(items) {
+            if (items.length === 0) {
+                return `
+                    <div class="section-card">
+                        <div class="section-header">Pre-Levy and Non Certified Mail</div>
+                        <div class="section-content">
+                            <div class="empty-state">No mail records available</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const totalPages = Math.ceil(items.length / itemsPerPage);
+            const startIdx = (currentPage - 1) * itemsPerPage;
+            const endIdx = startIdx + itemsPerPage;
+            const pageItems = items.slice(startIdx, endIdx);
+
+            const rows = pageItems.map(item => `
+                <tr>
+                    <td>${formatFieldName(item.type)}</td>
+                    <td>${item.value}</td>
+                    <td>-</td>
+                    <td>-</td>
+                </tr>
+            `).join('');
+
+            const pagination = totalPages > 1 ? `
+                <div class="pagination">
+                    <button onclick="changePage(-1)" ${currentPage === 1 ? 'disabled' : ''}>Previous</button>
+                    <span class="page-info">Page ${currentPage} of ${totalPages}</span>
+                    <button onclick="changePage(1)" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>
+                </div>
+            ` : '';
+
+            return `
+                <div class="section-card">
+                    <div class="section-header">Pre-Levy and Non Certified Mail</div>
+                    <div class="section-content">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Letter Type</th>
+                                    <th>Description</th>
+                                    <th>Name/Address</th>
+                                    <th>Letter Link</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                        ${pagination}
+                    </div>
+                </div>
+            `;
+        }
+
+        function changePage(direction) {
+            currentPage += direction;
+            loadParcelDetails();
         }
 
         async function loadParcelDetails() {
@@ -162,32 +692,49 @@
                 
                 if (data.success && data.parcel) {
                     const parcel = data.parcel;
+                    const categories = categorizeFields(parcel);
                     
-                    // Update title
-                    document.getElementById('parcelTitle').textContent = 
-                        `Parcel: ${parcel.map_parcel || parcel.parcel_id || 'Unknown'}`;
+                    let html = '';
                     
-                    // Create field cards
-                    const fields = Object.entries(parcel)
-                        .sort(([a], [b]) => a.localeCompare(b));
+                    // 1. Parcel Details
+                    html += renderParcelDetails(categories);
                     
-                    if (fields.length > 0) {
-                        container.innerHTML = fields.map(([key, value]) => `
-                            <div class="field-card">
-                                <div class="field-label">${formatFieldName(key)}</div>
-                                <div class="field-value">${value || '-'}</div>
-                            </div>
-                        `).join('');
-                    } else {
-                        container.innerHTML = '<div class="loading">No data available for this parcel</div>';
-                    }
+                    // 2. Property Description
+                    html += renderPropertyDescription(categories);
+                    
+                    // 3. Notes
+                    html += renderNotes(categories);
+                    
+                    // 4. Interested Parties
+                    html += renderInterestedParties(categories.interestedParties);
+                    
+                    // 5. Mortgage Holders
+                    html += renderMortgageHolders(categories.mortgageHolders);
+                    
+                    // 6. Lien Index
+                    html += renderLienIndex(categories.lienIndex);
+                    
+                    // 7. Bankruptcy and Probate
+                    html += renderBankruptcyAndProbate(categories.bankruptcy, categories.probate);
+                    
+                    // 8. Pre-Levy and Non Certified Mail
+                    html += renderPreLevyMail(categories.preLevyMail);
+                    
+                    container.innerHTML = html;
                 } else {
-                    container.innerHTML = `<div class="error">${data.error || 'Parcel not found'}</div>`;
+                    container.innerHTML = `
+                        <div class="section-card">
+                            <div class="error">${data.error || 'Parcel not found'}</div>
+                        </div>
+                    `;
                 }
             } catch (error) {
                 console.error('Error loading parcel details:', error);
-                document.getElementById('detailsContainer').innerHTML = 
-                    '<div class="error">Error loading parcel details</div>';
+                document.getElementById('detailsContainer').innerHTML = `
+                    <div class="section-card">
+                        <div class="error">Error loading parcel details</div>
+                    </div>
+                `;
             }
         }
 
