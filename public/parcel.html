@@ -275,6 +275,13 @@
         let currentPage = 1;
         const itemsPerPage = 10;
 
+        // HTML escape function to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         // Convert field names to readable labels
         function formatFieldName(fieldName) {
             return fieldName
@@ -361,7 +368,7 @@
                 leftColumn.push(`
                     <div class="field-group">
                         <div class="field-label">File #</div>
-                        <div class="field-value large">${fields.file__}</div>
+                        <div class="field-value large">${escapeHtml(fields.file__)}</div>
                     </div>
                 `);
             }
@@ -370,7 +377,7 @@
                 leftColumn.push(`
                     <div class="field-group">
                         <div class="field-label">Map/Parcel</div>
-                        <div class="field-value large">${fields.map_parcel}</div>
+                        <div class="field-value large">${escapeHtml(fields.map_parcel)}</div>
                     </div>
                 `);
             }
@@ -379,7 +386,7 @@
                 leftColumn.push(`
                     <div class="field-group">
                         <div class="field-label">Years Due</div>
-                        <div class="field-value">${fields.years_due}</div>
+                        <div class="field-value">${escapeHtml(fields.years_due)}</div>
                     </div>
                 `);
             }
@@ -388,7 +395,7 @@
                 leftColumn.push(`
                     <div class="field-group">
                         <div class="field-label">County</div>
-                        <div class="field-value">${fields.county}</div>
+                        <div class="field-value">${escapeHtml(fields.county)}</div>
                     </div>
                 `);
             }
@@ -398,7 +405,7 @@
             rightColumn.push(`
                 <div class="field-group">
                     <div class="field-label">Map View</div>
-                    <div class="field-value">${address}</div>
+                    <div class="field-value">${escapeHtml(address)}</div>
                 </div>
             `);
 
@@ -427,7 +434,7 @@
                 content += `
                     <div class="field-group">
                         <div class="field-label">Property Description</div>
-                        <div class="field-value">${propDesc}</div>
+                        <div class="field-value">${escapeHtml(propDesc)}</div>
                     </div>
                 `;
             }
@@ -436,7 +443,7 @@
                 content += `
                     <div class="legal-text">
                         <div class="field-label">Legal Description</div>
-                        <div class="field-value">${legal}</div>
+                        <div class="field-value">${escapeHtml(legal)}</div>
                     </div>
                 `;
             }
@@ -451,6 +458,16 @@
 
         function renderNotes(data) {
             const notes = Object.values(data.notes).join('\n') || 'No notes available';
+            
+            return `
+                <div class="section-card">
+                    <div class="section-header">Notes</div>
+                    <div class="section-content">
+                        <div class="notes-textarea">${escapeHtml(notes)}</div>
+                    </div>
+                </div>
+            `;
+        }
             
             return `
                 <div class="section-card">
@@ -476,8 +493,8 @@
 
             const rows = parties.map(p => `
                 <tr>
-                    <td>${formatFieldName(p.type)}</td>
-                    <td>${p.value}</td>
+                    <td>${escapeHtml(formatFieldName(p.type))}</td>
+                    <td>${escapeHtml(p.value)}</td>
                 </tr>
             `).join('');
 
@@ -519,9 +536,9 @@
                 
                 return `
                     <tr>
-                        <td>${formatFieldName(h.type)}</td>
-                        <td>${name}</td>
-                        <td>${address}</td>
+                        <td>${escapeHtml(formatFieldName(h.type))}</td>
+                        <td>${escapeHtml(name)}</td>
+                        <td>${escapeHtml(address)}</td>
                     </tr>
                 `;
             }).join('');
@@ -559,8 +576,8 @@
 
             const rows = liens.map(l => `
                 <tr>
-                    <td>${formatFieldName(l.type)}</td>
-                    <td>${l.value}</td>
+                    <td>${escapeHtml(formatFieldName(l.type))}</td>
+                    <td>${escapeHtml(l.value)}</td>
                 </tr>
             `).join('');
 
@@ -602,7 +619,7 @@
             if (hasBankruptcy) {
                 content += '<div class="field-group"><div class="field-label">Bankruptcy Information</div>';
                 for (const [key, value] of Object.entries(bankruptcy)) {
-                    content += `<div class="field-value">${formatFieldName(key)}: ${value}</div>`;
+                    content += `<div class="field-value">${escapeHtml(formatFieldName(key))}: ${escapeHtml(value)}</div>`;
                 }
                 content += '</div>';
             }
@@ -610,7 +627,7 @@
             if (hasProbate) {
                 content += '<div class="field-group"><div class="field-label">Probate Information</div>';
                 for (const [key, value] of Object.entries(probate)) {
-                    content += `<div class="field-value">${formatFieldName(key)}: ${value}</div>`;
+                    content += `<div class="field-value">${escapeHtml(formatFieldName(key))}: ${escapeHtml(value)}</div>`;
                 }
                 content += '</div>';
             }
@@ -642,8 +659,8 @@
 
             const rows = pageItems.map(item => `
                 <tr>
-                    <td>${formatFieldName(item.type)}</td>
-                    <td>${item.value}</td>
+                    <td>${escapeHtml(formatFieldName(item.type))}</td>
+                    <td>${escapeHtml(item.value)}</td>
                     <td>-</td>
                     <td>-</td>
                 </tr>
