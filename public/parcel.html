@@ -168,8 +168,7 @@
                         `Parcel: ${parcel.map_parcel || parcel.parcel_id || 'Unknown'}`;
                     
                     // Create field cards
-                    const fields = Object.entries(parcel)
-                        .sort(([a], [b]) => a.localeCompare(b));
+                    const fields = Object.entries(parcel);
                     
                     if (fields.length > 0) {
                         container.innerHTML = fields.map(([key, value]) => `

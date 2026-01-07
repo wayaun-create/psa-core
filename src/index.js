@@ -317,4 +317,11 @@ Answer the user's question about their parcels. Be concise and helpful. Use HTML
 });
 
 const port = process.env.PORT || 3000;
-app.listen(port, () => console.log(`Listening on ${port}`));
+
+// Only start server if not in Vercel environment
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(port, () => console.log(`Listening on ${port}`));
+}
+
+// Export for Vercel serverless
+module.exports = app;
