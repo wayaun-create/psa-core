@@ -263,64 +263,53 @@
                 notes: {}
             };
 
-            // Field mapping based on the screenshot
-            const fieldMap = {
-                // Parcel Details
-                file__: 'parcelDetails',
-                map_parcel: 'parcelDetails',
-                years_due: 'parcelDetails',
-                villa_or: 'parcelDetails',
-                
-                // Property Description
-                legal: 'propertyDescription',
-                property_address: 'propertyDescription',
-                
-                // Interested Parties
-                def: 'interestedParties',
-                def_add: 'interestedParties',
-                occ_add: 'interestedParties',
-                
-                // Mortgage Holders
-                lh: 'mortgageHolders',
-                lh_add: 'mortgageHolders',
-                lh_ref_deed: 'mortgageHolders',
-                lh_deed_info: 'mortgageHolders',
-                
-                // Lien Index (could have multiple)
-                lien: 'lienIndex',
-                
-                // Bankruptcy
-                bankruptcy_information: 'bankruptcy',
-                probate_information: 'bankruptcy',
-                
-                // Notes
-                notes: 'notes'
-            };
-
+            // Process each field
             for (const [key, value] of Object.entries(parcel)) {
                 if (value === null || value === '') continue;
                 
-                const category = fieldMap[key.toLowerCase()];
-                if (category) {
-                    categories[category][key] = value;
-                } else {
-                    // Auto-categorize based on keywords
-                    const keyLower = key.toLowerCase();
-                    if (keyLower.includes('lh') || keyLower.includes('lien_holder')) {
-                        categories.mortgageHolders[key] = value;
-                    } else if (keyLower.includes('def') || keyLower.includes('defendant')) {
-                        categories.interestedParties[key] = value;
-                    } else if (keyLower.includes('lien')) {
-                        categories.lienIndex[key] = value;
-                    } else if (keyLower.includes('bankrupt') || keyLower.includes('probate')) {
-                        categories.bankruptcy[key] = value;
-                    } else if (keyLower.includes('note')) {
-                        categories.notes[key] = value;
-                    } else if (keyLower.includes('legal') || keyLower.includes('address') || keyLower.includes('description')) {
-                        categories.propertyDescription[key] = value;
-                    } else {
-                        categories.parcelDetails[key] = value;
-                    }
+                const keyLower = key.toLowerCase();
+                
+                // PARCEL DETAILS (top section)
+                if (['file__', 'map_parcel', 'years_due'].includes(keyLower)) {
+                    categories.parcelDetails[key] = value;
+                }
+                // PROPERTY DESCRIPTION
+                else if (['legal', 'property_description', 'county', 'land_lot', 'gm_district', 
+                          'in_the_city_of', 'acres', 'tract_lot', 'block', 'subdivision', 
+                          'plat_book', 'plat_page', 'deed_book', 'deed_page', 'known_as'].includes(keyLower)) {
+                    categories.propertyDescription[key] = value;
+                }
+                // NOTES
+                else if (['notes', 'research_notes', 'internal_research_notes'].includes(keyLower)) {
+                    categories.notes[key] = value;
+                }
+                // INTERESTED PARTIES (all DEF fields, OCC, CRH, DN, RA, M fields)
+                else if (keyLower.startsWith('def') || keyLower.startsWith('dn_add') || 
+                         keyLower.startsWith('occ_add') || keyLower.startsWith('crh') ||
+                         keyLower.startsWith('_ra_') || keyLower.startsWith('ra_') ||
+                         keyLower.startsWith('m1') || keyLower.startsWith('m2') || keyLower.startsWith('m3') ||
+                         keyLower.startsWith('pp_owner')) {
+                    categories.interestedParties[key] = value;
+                }
+                // MORTGAGE HOLDERS (LH1, LH2, LH3, LH4, LH5)
+                else if (keyLower.startsWith('lh1') || keyLower.startsWith('lh2') || 
+                         keyLower.startsWith('lh3') || keyLower.startsWith('lh4') || 
+                         keyLower.startsWith('lh5')) {
+                    categories.mortgageHolders[key] = value;
+                }
+                // LIEN INDEX (FTL, GTL, DOL, CITY, COL, STL, OTL)
+                else if (['ftl', 'ftl_book_page', 'gtl', 'gtl_book_page', 'dol', 'dol_book_page',
+                          'city', 'city_book_page'].includes(keyLower)) {
+                    categories.lienIndex[key] = value;
+                }
+                // BANKRUPTCY AND PROBATE
+                else if (['bankruptcy', 'bankruptcy_information', 'probate_information', 
+                          'check_probate'].includes(keyLower)) {
+                    categories.bankruptcy[key] = value;
+                }
+                // Everything else goes to parcel details (bill, account, etc.)
+                else {
+                    categories.parcelDetails[key] = value;
                 }
             }
 
