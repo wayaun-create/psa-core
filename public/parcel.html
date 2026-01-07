@@ -310,7 +310,7 @@
                 const lowerKey = key.toLowerCase();
                 
                 // Parcel Details (top section)
-                if (['file__', 'map_parcel', 'years_due', 'county', 'parcel_id'].includes(lowerKey)) {
+                if (['file__', 'map_parcel', 'years_due', 'county', 'parcel_id', 'property_address'].includes(lowerKey)) {
                     categories.parcelDetails[key] = value;
                 }
                 // Property Description
