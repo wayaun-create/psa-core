@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -265,12 +266,15 @@ app.post("/api/chat", async (req, res) => {
     
     // Check if OpenAI API key is configured
     if (!process.env.OPENAI_API_KEY) {
+      console.log('OPENAI_API_KEY is missing or empty');
       // Fallback to simple keyword matching if no API key
       return res.json({ 
         success: true, 
         response: `AI chat requires an OPENAI_API_KEY environment variable. Please add it to enable intelligent responses.<br><br>You have ${parcelsResult.rows.length} total parcels across ${taxSalesResult.rows.length} tax sales.`
       });
     }
+    
+    console.log('OPENAI_API_KEY is present:', process.env.OPENAI_API_KEY ? 'YES (starts with ' + process.env.OPENAI_API_KEY.substring(0, 8) + '...)' : 'NO');
 
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY
