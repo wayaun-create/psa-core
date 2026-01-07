@@ -13,7 +13,7 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #f3f4f6;
+            background: #f5f5f5;
             min-height: 100vh;
         }
         
@@ -49,52 +49,141 @@
         }
         
         .container {
-            max-width: 1200px;
-            margin: 40px auto;
+            max-width: 1400px;
+            margin: 20px auto;
             padding: 0 20px;
         }
         
-        .title-section {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-        }
-        
-        .title-section h2 {
-            color: #333;
-            margin-bottom: 5px;
-        }
-        
-        .details-grid {
+        .layout {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .left-column, .right-column {
+            display: flex;
+            flex-direction: column;
             gap: 20px;
         }
         
-        .field-card {
+        .section {
             background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .section-header {
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 12px 20px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .section-content {
             padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            border-left: 4px solid #667eea;
+        }
+        
+        .field-row {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: start;
+        }
+        
+        .field-row:last-child {
+            margin-bottom: 0;
         }
         
         .field-label {
-            font-size: 0.75rem;
-            color: #6b7280;
+            font-size: 0.8rem;
+            color: #666;
+            font-weight: 500;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-            font-weight: 600;
         }
         
         .field-value {
             color: #111827;
-            font-size: 1rem;
-            word-break: break-word;
+            font-size: 0.95rem;
             line-height: 1.5;
+            word-break: break-word;
+        }
+        
+        .field-value.large {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .subsection-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .subsection {
+            background: #fafafa;
+            padding: 15px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+        }
+        
+        .subsection-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #667eea;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+        
+        .subsection .field-row {
+            grid-template-columns: 120px 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .subsection .field-label {
+            font-size: 0.75rem;
+        }
+        
+        .subsection .field-value {
+            font-size: 0.875rem;
+        }
+        
+        .map-container {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 6px;
+            text-align: center;
+            color: #666;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .map-address {
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+        }
+        
+        .map-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .map-link:hover {
+            text-decoration: underline;
         }
         
         .loading {
@@ -102,8 +191,7 @@
             text-align: center;
             color: #6b7280;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
         }
         
         .error {
@@ -111,8 +199,18 @@
             text-align: center;
             color: #ef4444;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        
+        @media (max-width: 968px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .field-row {
+                grid-template-columns: 1fr;
+                gap: 5px;
+            }
         }
     </style>
 </head>
@@ -123,12 +221,8 @@
     </div>
     
     <div class="container">
-        <div class="title-section">
-            <h2 id="parcelTitle">Loading parcel details...</h2>
-        </div>
-        
-        <div id="detailsContainer" class="details-grid">
-            <div class="loading">Loading...</div>
+        <div id="mainContent">
+            <div class="loading">Loading parcel details...</div>
         </div>
     </div>
 
@@ -144,13 +238,202 @@
             window.location.href = '/dashboard.html';
         }
 
-        // Convert field names to readable labels
+        function escapeHtml(text) {
+            if (!text) return '-';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         function formatFieldName(fieldName) {
             return fieldName
                 .replace(/_/g, ' ')
                 .replace(/\b\w/g, l => l.toUpperCase())
-                .replace(/  +/g, ' - ')
                 .trim();
+        }
+
+        function categorizeFields(parcel) {
+            const categories = {
+                parcelDetails: {},
+                propertyDescription: {},
+                interestedParties: {},
+                mortgageHolders: {},
+                lienIndex: {},
+                bankruptcy: {},
+                notes: {}
+            };
+
+            // Field mapping based on the screenshot
+            const fieldMap = {
+                // Parcel Details
+                file__: 'parcelDetails',
+                map_parcel: 'parcelDetails',
+                years_due: 'parcelDetails',
+                villa_or: 'parcelDetails',
+                
+                // Property Description
+                legal: 'propertyDescription',
+                property_address: 'propertyDescription',
+                
+                // Interested Parties
+                def: 'interestedParties',
+                def_add: 'interestedParties',
+                occ_add: 'interestedParties',
+                
+                // Mortgage Holders
+                lh: 'mortgageHolders',
+                lh_add: 'mortgageHolders',
+                lh_ref_deed: 'mortgageHolders',
+                lh_deed_info: 'mortgageHolders',
+                
+                // Lien Index (could have multiple)
+                lien: 'lienIndex',
+                
+                // Bankruptcy
+                bankruptcy_information: 'bankruptcy',
+                probate_information: 'bankruptcy',
+                
+                // Notes
+                notes: 'notes'
+            };
+
+            for (const [key, value] of Object.entries(parcel)) {
+                if (value === null || value === '') continue;
+                
+                const category = fieldMap[key.toLowerCase()];
+                if (category) {
+                    categories[category][key] = value;
+                } else {
+                    // Auto-categorize based on keywords
+                    const keyLower = key.toLowerCase();
+                    if (keyLower.includes('lh') || keyLower.includes('lien_holder')) {
+                        categories.mortgageHolders[key] = value;
+                    } else if (keyLower.includes('def') || keyLower.includes('defendant')) {
+                        categories.interestedParties[key] = value;
+                    } else if (keyLower.includes('lien')) {
+                        categories.lienIndex[key] = value;
+                    } else if (keyLower.includes('bankrupt') || keyLower.includes('probate')) {
+                        categories.bankruptcy[key] = value;
+                    } else if (keyLower.includes('note')) {
+                        categories.notes[key] = value;
+                    } else if (keyLower.includes('legal') || keyLower.includes('address') || keyLower.includes('description')) {
+                        categories.propertyDescription[key] = value;
+                    } else {
+                        categories.parcelDetails[key] = value;
+                    }
+                }
+            }
+
+            return categories;
+        }
+
+        function renderField(key, value) {
+            return `
+                <div class="field-row">
+                    <div class="field-label">${escapeHtml(formatFieldName(key))}</div>
+                    <div class="field-value">${escapeHtml(value)}</div>
+                </div>
+            `;
+        }
+
+        function renderParcelDetails(data) {
+            const parcel = data;
+            const categories = categorizeFields(parcel);
+            
+            // Get address for map
+            const address = parcel.property_address || parcel.def_add || '';
+            const mapParcel = parcel.map_parcel || parcel.parcel_id || 'Unknown';
+            
+            return `
+                <div class="layout">
+                    <div class="left-column">
+                        <!-- Parcel Details Section -->
+                        <div class="section">
+                            <div class="section-header">Parcel Details</div>
+                            <div class="section-content">
+                                ${Object.entries(categories.parcelDetails).map(([k, v]) => renderField(k, v)).join('')}
+                                ${Object.keys(categories.parcelDetails).length === 0 ? '<div class="field-value">No parcel details available</div>' : ''}
+                            </div>
+                        </div>
+
+                        <!-- Property Description Section -->
+                        ${Object.keys(categories.propertyDescription).length > 0 ? `
+                        <div class="section">
+                            <div class="section-header">Property Description</div>
+                            <div class="section-content">
+                                ${Object.entries(categories.propertyDescription).map(([k, v]) => renderField(k, v)).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <!-- Notes Section -->
+                        ${Object.keys(categories.notes).length > 0 ? `
+                        <div class="section">
+                            <div class="section-header">Notes</div>
+                            <div class="section-content">
+                                ${Object.entries(categories.notes).map(([k, v]) => renderField(k, v)).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <!-- Subsections Grid -->
+                        <div class="subsection-grid">
+                            <!-- Interested Parties -->
+                            ${Object.keys(categories.interestedParties).length > 0 ? `
+                            <div class="subsection">
+                                <div class="subsection-title">Interested Parties</div>
+                                ${Object.entries(categories.interestedParties).map(([k, v]) => renderField(k, v)).join('')}
+                            </div>
+                            ` : ''}
+
+                            <!-- Mortgage Holders -->
+                            ${Object.keys(categories.mortgageHolders).length > 0 ? `
+                            <div class="subsection">
+                                <div class="subsection-title">Mortgage Holders</div>
+                                ${Object.entries(categories.mortgageHolders).map(([k, v]) => renderField(k, v)).join('')}
+                            </div>
+                            ` : ''}
+
+                            <!-- Lien Index -->
+                            ${Object.keys(categories.lienIndex).length > 0 ? `
+                            <div class="subsection">
+                                <div class="subsection-title">Lien Index</div>
+                                ${Object.entries(categories.lienIndex).map(([k, v]) => renderField(k, v)).join('')}
+                            </div>
+                            ` : ''}
+                        </div>
+
+                        <!-- Bankruptcy and Probate -->
+                        ${Object.keys(categories.bankruptcy).length > 0 ? `
+                        <div class="section">
+                            <div class="section-header">Bankruptcy and Probate</div>
+                            <div class="section-content">
+                                ${Object.entries(categories.bankruptcy).map(([k, v]) => renderField(k, v)).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    <div class="right-column">
+                        <!-- Map View Section -->
+                        <div class="section">
+                            <div class="section-header">Map View</div>
+                            <div class="section-content">
+                                <div class="map-container">
+                                    ${address ? `
+                                        <div class="map-address">${escapeHtml(address)}</div>
+                                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}" 
+                                           target="_blank" 
+                                           class="map-link">
+                                           📍 View on Google Maps
+                                        </a>
+                                    ` : '<div>No address available</div>'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
         async function loadParcelDetails() {
@@ -158,34 +441,16 @@
                 const response = await fetch(`${API_BASE}/api/parcel/${parcelId}`);
                 const data = await response.json();
                 
-                const container = document.getElementById('detailsContainer');
+                const mainContent = document.getElementById('mainContent');
                 
                 if (data.success && data.parcel) {
-                    const parcel = data.parcel;
-                    
-                    // Update title
-                    document.getElementById('parcelTitle').textContent = 
-                        `Parcel: ${parcel.map_parcel || parcel.parcel_id || 'Unknown'}`;
-                    
-                    // Create field cards
-                    const fields = Object.entries(parcel);
-                    
-                    if (fields.length > 0) {
-                        container.innerHTML = fields.map(([key, value]) => `
-                            <div class="field-card">
-                                <div class="field-label">${formatFieldName(key)}</div>
-                                <div class="field-value">${value || '-'}</div>
-                            </div>
-                        `).join('');
-                    } else {
-                        container.innerHTML = '<div class="loading">No data available for this parcel</div>';
-                    }
+                    mainContent.innerHTML = renderParcelDetails(data.parcel);
                 } else {
-                    container.innerHTML = `<div class="error">${data.error || 'Parcel not found'}</div>`;
+                    mainContent.innerHTML = `<div class="error">${escapeHtml(data.error || 'Parcel not found')}</div>`;
                 }
             } catch (error) {
                 console.error('Error loading parcel details:', error);
-                document.getElementById('detailsContainer').innerHTML = 
+                document.getElementById('mainContent').innerHTML = 
                     '<div class="error">Error loading parcel details</div>';
             }
         }
