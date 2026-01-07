@@ -20,7 +20,7 @@ const pool = new Pool({
     console.log('✅ Table created successfully:');
     console.log('   - Schema: core');
     console.log('   - Table: parcels_test');
-    console.log('   - Columns: 96 TEXT columns + id (SERIAL) + timestamps');
+    console.log('   - Columns: 99 TEXT columns + id (SERIAL) + timestamps');
     console.log('   - Indexes: tax_sale_id, parcel_id');
     
     await pool.end();

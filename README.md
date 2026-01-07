@@ -49,7 +49,7 @@ This will load 52 rows of tax sale data from `data/conyers_may_2025_sample_56.cs
 **Table location:** `core.parcels_test`
 
 **Features:**
-- 96 TEXT columns for flexible data storage
+- 99 TEXT columns for flexible data storage
 - Auto-incrementing `id` primary key
 - Timestamps (`created_at`, `updated_at`)
 - Indexes on `tax_sale_id` and `parcel_id` for faster lookups
