@@ -4,5 +4,8 @@
       "source": "/api/:path*",
       "destination": "/api"
     }
-  ]
+  ],
+  "env": {
+    "OPENAI_API_KEY": "@openai_api_key"
+  }
 }
