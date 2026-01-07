@@ -1,0 +1,12 @@
+node_modules/
+.env
+.env.local
+.DS_Store
+*.log
+worker/
+sql/
+check-orphaned.js
+inspect-schema.js
+migrate-foreign-keys.js
+render.yaml
+README.md
