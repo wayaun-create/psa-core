@@ -297,6 +297,30 @@
         </div>
     </div>
 
+    <!-- Chat Widget -->
+    <div class="chat-widget" id="chatWidget">
+        <div class="chat-header" onclick="toggleChat()">
+            <h3>💬 Parcel Assistant</h3>
+            <button class="chat-toggle" id="chatToggle">−</button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="message assistant">
+                <div class="message-bubble">
+                    Hi! I can help you find information about your parcels. Try asking me things like:
+                    <br>• "How many parcels are in Butts County?"
+                    <br>• "Show me parcels with defendant John Smith"
+                    <br>• "What parcels are in tax sale 99?"
+                </div>
+            </div>
+        </div>
+        <div class="chat-input-container">
+            <div class="chat-input">
+                <input type="text" id="chatInput" placeholder="Ask about your parcels..." />
+                <button class="chat-send-btn" id="chatSendBtn" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_BASE = window.location.hostname === 'localhost' 
             ? window.location.origin 
@@ -432,29 +456,5 @@
             }
         });
     </script>
-    
-    <!-- Chat Widget -->
-    <div class="chat-widget" id="chatWidget">
-        <div class="chat-header" onclick="toggleChat()">
-            <h3>💬 Parcel Assistant</h3>
-            <button class="chat-toggle" id="chatToggle">−</button>
-        </div>
-        <div class="chat-messages" id="chatMessages">
-            <div class="message assistant">
-                <div class="message-bubble">
-                    Hi! I can help you find information about your parcels. Try asking me things like:
-                    <br>• "How many parcels are in Butts County?"
-                    <br>• "Show me parcels with defendant John Smith"
-                    <br>• "What parcels are in tax sale 99?"
-                </div>
-            </div>
-        </div>
-        <div class="chat-input-container">
-            <div class="chat-input">
-                <input type="text" id="chatInput" placeholder="Ask about your parcels..." />
-                <button class="chat-send-btn" id="chatSendBtn" onclick="sendMessage()">Send</button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>
