@@ -555,13 +555,27 @@
         
         function formatFieldName(fieldName) {
             // Convert snake_case to Title Case
+            if (!fieldName) return '';
             return fieldName
                 .split('_')
                 .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                 .join(' ');
         }
         
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
         function displayClientInfo(data) {
+            if (!data) {
+                document.getElementById('clientInfoGrid').innerHTML = 
+                    '<p style="color: #6b7280;">No client information available</p>';
+                return;
+            }
+            
             const clientInfoGrid = document.getElementById('clientInfoGrid');
             const excludeFields = ['success', 'clientCount', 'taxSaleCount', 'parcelCount'];
             
@@ -575,8 +589,8 @@
                 })
                 .map(([key, value]) => `
                     <div class="client-info-item">
-                        <div class="client-info-label">${formatFieldName(key)}</div>
-                        <div class="client-info-value">${value}</div>
+                        <div class="client-info-label">${escapeHtml(formatFieldName(key))}</div>
+                        <div class="client-info-value">${escapeHtml(String(value))}</div>
                     </div>
                 `);
             
@@ -630,19 +644,10 @@
                     
                     // Render active tax sales
                     if (activeTaxSales.length > 0) {
-                        activeTaxSaleList.innerHTML = activeTaxSales.map(ts => `
-                            <button class="tax-sale-btn" onclick="viewParcels('${ts.tax_sale_id}', '${ts.tax_sale_name || 'Tax Sale'}')">
-                                <div class="tax-sale-info">
-                                    <div class="tax-sale-name">${ts.tax_sale_name || 'Untitled Tax Sale'}</div>
-                                    <div class="tax-sale-meta">
-                                        ${ts.sale_date ? new Date(ts.sale_date).toLocaleDateString() : 'No date'} 
-                                        ${ts.county ? '• ' + ts.county : ''}
-                                        ${ts.status ? '• ' + ts.status : ''}
-                                    </div>
-                                </div>
-                                <div class="tax-sale-arrow">→</div>
-                            </button>
-                        `).join('');
+                        activeTaxSaleList.innerHTML = '';
+                        activeTaxSales.forEach(ts => {
+                            activeTaxSaleList.appendChild(createTaxSaleButton(ts, false));
+                        });
                     } else {
                         activeTaxSaleList.innerHTML = `
                             <div class="empty-state">
@@ -654,19 +659,10 @@
                     
                     // Render completed tax sales
                     if (completedTaxSales.length > 0) {
-                        completedTaxSaleList.innerHTML = completedTaxSales.map(ts => `
-                            <button class="tax-sale-btn completed" onclick="viewParcels('${ts.tax_sale_id}', '${ts.tax_sale_name || 'Tax Sale'}')">
-                                <div class="tax-sale-info">
-                                    <div class="tax-sale-name">${ts.tax_sale_name || 'Untitled Tax Sale'}</div>
-                                    <div class="tax-sale-meta">
-                                        ${ts.sale_date ? new Date(ts.sale_date).toLocaleDateString() : 'No date'} 
-                                        ${ts.county ? '• ' + ts.county : ''}
-                                        ${ts.status ? '• ' + ts.status : ''}
-                                    </div>
-                                </div>
-                                <div class="tax-sale-arrow">→</div>
-                            </button>
-                        `).join('');
+                        completedTaxSaleList.innerHTML = '';
+                        completedTaxSales.forEach(ts => {
+                            completedTaxSaleList.appendChild(createTaxSaleButton(ts, true));
+                        });
                     } else {
                         completedTaxSaleList.innerHTML = `
                             <div class="empty-state">
@@ -696,6 +692,43 @@
                 document.getElementById('completedTaxSaleList').innerHTML = 
                     '<p style="color: #ef4444;">Error loading tax sales</p>';
             }
+        }
+        
+        function createTaxSaleButton(ts, isCompleted) {
+            const button = document.createElement('button');
+            button.className = isCompleted ? 'tax-sale-btn completed' : 'tax-sale-btn';
+            button.onclick = () => viewParcels(ts.tax_sale_id, ts.tax_sale_name || 'Tax Sale');
+            
+            const info = document.createElement('div');
+            info.className = 'tax-sale-info';
+            
+            const name = document.createElement('div');
+            name.className = 'tax-sale-name';
+            name.textContent = ts.tax_sale_name || 'Untitled Tax Sale';
+            
+            const meta = document.createElement('div');
+            meta.className = 'tax-sale-meta';
+            const metaParts = [];
+            if (ts.sale_date) {
+                metaParts.push(new Date(ts.sale_date).toLocaleDateString());
+            } else {
+                metaParts.push('No date');
+            }
+            if (ts.county) metaParts.push('• ' + ts.county);
+            if (ts.status) metaParts.push('• ' + ts.status);
+            meta.textContent = metaParts.join(' ');
+            
+            info.appendChild(name);
+            info.appendChild(meta);
+            
+            const arrow = document.createElement('div');
+            arrow.className = 'tax-sale-arrow';
+            arrow.textContent = '→';
+            
+            button.appendChild(info);
+            button.appendChild(arrow);
+            
+            return button;
         }
 
         function viewParcels(taxSaleId, taxSaleName) {
