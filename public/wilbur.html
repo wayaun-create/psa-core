@@ -429,7 +429,13 @@
             
             const bubble = document.createElement('div');
             bubble.className = 'message-bubble';
-            bubble.innerHTML = text;
+            // Use textContent for user messages to prevent XSS, but allow HTML for assistant responses
+            if (isUser) {
+                bubble.textContent = text;
+            } else {
+                // Assistant responses may contain formatting, but should be sanitized by the backend
+                bubble.innerHTML = text;
+            }
             
             const time = document.createElement('div');
             time.className = 'message-time';
