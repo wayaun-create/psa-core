@@ -610,11 +610,7 @@
             }
         }
         
-        let currentTab = 'active';
-        
         function switchTab(tab) {
-            currentTab = tab;
-            
             // Update tab buttons using data attributes
             const tabs = document.querySelectorAll('.tab');
             tabs.forEach(t => {
@@ -629,6 +625,8 @@
             document.getElementById('activeTab').classList.toggle('active', tab === 'active');
             document.getElementById('completedTab').classList.toggle('active', tab === 'completed');
         }
+        
+        const COMPLETED_STATUS = 'completed';
 
         function createEmptyState(icon, text) {
             const container = document.createElement('div');
@@ -662,7 +660,7 @@
                     const completedTaxSales = [];
                     
                     data.taxSales.forEach(ts => {
-                        if (ts.status && ts.status.toLowerCase() === 'completed') {
+                        if (ts.status && ts.status.toLowerCase() === COMPLETED_STATUS) {
                             completedTaxSales.push(ts);
                         } else {
                             activeTaxSales.push(ts);
