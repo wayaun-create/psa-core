@@ -427,11 +427,16 @@ app.post("/api/wilbur", async (req, res) => {
     res.json({ success: true, response: aiResponse });
   } catch (e) {
     console.error('WilburAI error:', e);
+    console.error('Error details:', {
+      message: e.message,
+      stack: e.stack,
+      name: e.name
+    });
     
-    // Fallback response
+    // Fallback response with more specific error for debugging
     res.json({ 
       success: true, 
-      response: "I'm experiencing technical difficulties at the moment. Please try again later. If the problem persists, please contact support."
+      response: `I'm experiencing technical difficulties at the moment. Error: ${e.message}. Please try again later or contact support.`
     });
   }
 });
