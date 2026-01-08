@@ -270,6 +270,11 @@
             color: #6b7280;
         }
         
+        .tax-sale-arrow {
+            color: #667eea;
+            font-size: 1.5rem;
+        }
+        
         .tax-sale-btn.completed {
             border-left-color: #10b981;
         }
@@ -469,8 +474,8 @@
         <div class="section">
             <h2>Tax Sales</h2>
             <div class="tabs">
-                <button class="tab active" onclick="switchTab('active')">Active Tax Sales</button>
-                <button class="tab" onclick="switchTab('completed')">Completed Tax Sales</button>
+                <button class="tab active" data-tab="active" onclick="switchTab('active')">Active Tax Sales</button>
+                <button class="tab" data-tab="completed" onclick="switchTab('completed')">Completed Tax Sales</button>
             </div>
             <div id="activeTab" class="tab-content active">
                 <div id="activeTaxSaleList" class="tax-sale-list">
@@ -587,11 +592,10 @@
         function switchTab(tab) {
             currentTab = tab;
             
-            // Update tab buttons
+            // Update tab buttons using data attributes
             const tabs = document.querySelectorAll('.tab');
             tabs.forEach(t => {
-                if ((tab === 'active' && t.textContent.includes('Active')) ||
-                    (tab === 'completed' && t.textContent.includes('Completed'))) {
+                if (t.dataset.tab === tab) {
                     t.classList.add('active');
                 } else {
                     t.classList.remove('active');
@@ -612,13 +616,17 @@
                 const completedTaxSaleList = document.getElementById('completedTaxSaleList');
                 
                 if (data.success && data.taxSales.length > 0) {
-                    // Separate active and completed tax sales
-                    const activeTaxSales = data.taxSales.filter(ts => 
-                        !ts.status || ts.status.toLowerCase() !== 'completed'
-                    );
-                    const completedTaxSales = data.taxSales.filter(ts => 
-                        ts.status && ts.status.toLowerCase() === 'completed'
-                    );
+                    // Separate active and completed tax sales in a single iteration
+                    const activeTaxSales = [];
+                    const completedTaxSales = [];
+                    
+                    data.taxSales.forEach(ts => {
+                        if (ts.status && ts.status.toLowerCase() === 'completed') {
+                            completedTaxSales.push(ts);
+                        } else {
+                            activeTaxSales.push(ts);
+                        }
+                    });
                     
                     // Render active tax sales
                     if (activeTaxSales.length > 0) {
