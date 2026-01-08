@@ -339,112 +339,43 @@ app.post("/api/wilbur", async (req, res) => {
     });
   }
   
-  // Check if OpenAI Assistant ID is configured
-  if (!process.env.OPENAI_ASSISTANT_ID) {
-    console.log('WilburAI: OPENAI_ASSISTANT_ID is missing');
-    return res.json({ 
-      success: true, 
-      response: "WilburAI requires an OPENAI_ASSISTANT_ID environment variable to be configured. Please contact your administrator to enable this feature."
-    });
-  }
-  
   try {
-    console.log('WilburAI request started for message:', message.substring(0, 50));
-    
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY
     });
 
-    // Create a new thread for this conversation
-    const thread = await openai.beta.threads.create();
-    console.log('Thread created - Type:', typeof thread, 'Keys:', Object.keys(thread), 'ID:', thread?.id);
-    
-    if (!thread || !thread.id) {
-      console.error('Thread creation failed:', thread);
-      throw new Error('Failed to create thread - no thread ID returned');
-    }
-    
-    const threadId = thread.id;
-    console.log('Using threadId:', threadId);
-    
-    // Add the user's message to the thread
-    const userMessage = await openai.beta.threads.messages.create(threadId, {
-      role: "user",
-      content: message
+    // Use Chat Completions API with WilburAI system prompt
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: `You are WilburAI, a knowledgeable legal assistant specializing in property tax sales, tax deeds, tax liens, and related legal processes. 
+
+Your role is to:
+- Provide clear, accurate information about property tax sales and related legal topics
+- Explain complex legal concepts in understandable terms
+- Help users understand tax deed sales, tax liens, redemption rights, and legal procedures
+- Answer questions about legal documents needed for property tax sales
+
+Important guidelines:
+- Always remind users that you provide general legal information, not legal advice
+- Encourage users to consult with a qualified attorney for specific legal matters
+- Be professional, helpful, and thorough in your responses
+- Use clear language while maintaining legal accuracy
+- Format your responses in a readable way with paragraphs and bullet points when appropriate`
+        },
+        {
+          role: "user",
+          content: message
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 1000
     });
-    console.log('Message added to thread:', userMessage?.id);
-    
-    // Run the assistant
-    const run = await openai.beta.threads.runs.create(threadId, {
-      assistant_id: process.env.OPENAI_ASSISTANT_ID
-    });
-    console.log('Run created - Type:', typeof run, 'Keys:', Object.keys(run), 'ID:', run?.id, 'Thread ID:', run?.thread_id);
-    
-    if (!run || !run.id) {
-      console.error('Run creation failed:', run);
-      throw new Error('Failed to create run - no run ID returned');
-    }
-    
-    const runId = run.id;
-    console.log('Polling for run completion - threadId:', threadId, 'runId:', runId);
-    
-    // Poll for completion (max 30 attempts with 1 second intervals)
-    let runStatus = run;
-    let attempts = 0;
-    const maxAttempts = 30;
-    
-    while (attempts < maxAttempts) {
-      console.log(`Attempt ${attempts + 1}: Retrieving run status with threadId=${threadId}, runId=${runId}`);
-      runStatus = await openai.beta.threads.runs.retrieve(threadId, runId);
-      
-      if (runStatus.status === 'completed') {
-        break;
-      } else if (runStatus.status === 'failed') {
-        console.error('WilburAI run failed:', runStatus.last_error);
-        return res.json({
-          success: true,
-          response: "I apologize, but I encountered an error processing your request. Please try rephrasing your question or try again later."
-        });
-      } else if (runStatus.status === 'cancelled') {
-        return res.json({
-          success: true,
-          response: "The request was cancelled. Please try again."
-        });
-      } else if (runStatus.status === 'expired') {
-        return res.json({
-          success: true,
-          response: "The request timed out. Please try again with a simpler question."
-        });
-      }
-      
-      // Wait 1 second before checking again
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      attempts++;
-    }
-    
-    if (runStatus.status !== 'completed') {
-      return res.json({
-        success: true,
-        response: "I'm taking longer than expected to respond. Please try again or ask a simpler question."
-      });
-    }
-    
-    // Get the assistant's messages
-    const messages = await openai.beta.threads.messages.list(threadId);
-    
-    // Find the assistant's response (the first assistant message after the user's message)
-    const assistantMessage = messages.data.find(msg => msg.role === 'assistant');
-    
-    if (!assistantMessage || !assistantMessage.content || assistantMessage.content.length === 0) {
-      return res.json({
-        success: true,
-        response: "I apologize, but I couldn't generate a response. Please try asking your question differently."
-      });
-    }
-    
-    // Extract text content from the message
-    const textContent = assistantMessage.content.find(content => content.type === 'text');
-    const aiResponse = textContent ? textContent.text.value : "I apologize, but I couldn't generate a proper response.";
+
+    const aiResponse = completion.choices[0]?.message?.content || 
+      "I apologize, but I couldn't generate a response. Please try asking your question differently.";
     
     res.json({ success: true, response: aiResponse });
   } catch (e) {
@@ -455,10 +386,10 @@ app.post("/api/wilbur", async (req, res) => {
       name: e.name
     });
     
-    // Fallback response with more specific error for debugging
+    // Fallback response
     res.json({ 
       success: true, 
-      response: `I'm experiencing technical difficulties at the moment. Error: ${e.message}. Please try again later or contact support.`
+      response: `I'm experiencing technical difficulties at the moment. Please try again later or contact support.`
     });
   }
 });
