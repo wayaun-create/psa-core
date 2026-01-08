@@ -349,31 +349,36 @@ app.post("/api/wilbur", async (req, res) => {
   }
   
   try {
+    console.log('WilburAI request started for message:', message.substring(0, 50));
+    
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY
     });
 
     // Create a new thread for this conversation
     const thread = await openai.beta.threads.create();
-    console.log('Thread created:', { id: thread?.id, full: thread });
+    console.log('Thread created - Type:', typeof thread, 'Keys:', Object.keys(thread), 'ID:', thread?.id);
     
     if (!thread || !thread.id) {
+      console.error('Thread creation failed:', thread);
       throw new Error('Failed to create thread - no thread ID returned');
     }
     
     const threadId = thread.id;
+    console.log('Using threadId:', threadId);
     
     // Add the user's message to the thread
-    await openai.beta.threads.messages.create(threadId, {
+    const userMessage = await openai.beta.threads.messages.create(threadId, {
       role: "user",
       content: message
     });
+    console.log('Message added to thread:', userMessage?.id);
     
     // Run the assistant
     const run = await openai.beta.threads.runs.create(threadId, {
       assistant_id: process.env.OPENAI_ASSISTANT_ID
     });
-    console.log('Run created:', { id: run?.id, threadId: threadId });
+    console.log('Run created - Type:', typeof run, 'Keys:', Object.keys(run), 'ID:', run?.id, 'Thread ID:', run?.thread_id);
     
     // Poll for completion (max 30 attempts with 1 second intervals)
     let runStatus = run;
