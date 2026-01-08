@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WilburAI Legal Assistant - PSA Core</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f3f4f6;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.75rem;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .header-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 8px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .header-btn:hover {
+            background: white;
+            color: #2563eb;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .welcome {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .welcome h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .welcome p {
+            color: #666;
+            font-size: 1.05rem;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+        
+        .disclaimer {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .disclaimer strong {
+            color: #92400e;
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .disclaimer p {
+            color: #78350f;
+            font-size: 0.95rem;
+        }
+        
+        .suggestions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .suggestion-btn {
+            background: #eff6ff;
+            border: 2px solid #dbeafe;
+            padding: 14px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 0.95rem;
+            color: #1e40af;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        
+        .suggestion-btn:hover {
+            background: #dbeafe;
+            border-color: #2563eb;
+            transform: translateY(-2px);
+        }
+        
+        .chat-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chat-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        .chat-messages {
+            height: 600px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            scroll-behavior: smooth;
+        }
+        
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .message.user {
+            align-items: flex-end;
+        }
+        
+        .message.assistant {
+            align-items: flex-start;
+        }
+        
+        .message-bubble {
+            max-width: 75%;
+            padding: 14px 18px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+        
+        .message.user .message-bubble {
+            background: #2563eb;
+            color: white;
+        }
+        
+        .message.assistant .message-bubble {
+            background: white;
+            color: #111827;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .message-time {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 6px;
+            padding: 0 4px;
+        }
+        
+        .typing-indicator {
+            display: none;
+            padding: 14px 18px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            width: fit-content;
+        }
+        
+        .typing-indicator.active {
+            display: block;
+        }
+        
+        .typing-dots {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            background: #9ca3af;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+        
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+        
+        .chat-input-container {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+        
+        .chat-input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+        
+        .chat-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: none;
+            min-height: 48px;
+            max-height: 120px;
+            overflow-y: auto;
+            transition: border-color 0.2s;
+        }
+        
+        .chat-input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+        
+        .chat-send-btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.2s;
+            white-space: nowrap;
+            min-height: 48px;
+        }
+        
+        .chat-send-btn:hover:not(:disabled) {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+        
+        .chat-send-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 12px;
+                padding: 16px 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .suggestions {
+                grid-template-columns: 1fr;
+            }
+            
+            .chat-messages {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⚖️ WilburAI Legal Assistant</h1>
+        <div class="header-buttons">
+            <a href="/dashboard.html" class="header-btn">Back to Dashboard</a>
+            <button class="header-btn" onclick="logout()">Logout</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="welcome">
+            <h2>Welcome to WilburAI</h2>
+            <p>
+                WilburAI is your intelligent legal assistant for property tax sales and related legal topics. 
+                Ask questions about tax deed sales, tax liens, redemption rights, legal documents, and more.
+            </p>
+            
+            <div class="disclaimer">
+                <strong>⚠️ Legal Disclaimer</strong>
+                <p>
+                    WilburAI provides general legal information only and does not constitute legal advice. 
+                    For specific legal matters, please consult with a qualified attorney in your jurisdiction.
+                </p>
+            </div>
+            
+            <div class="suggestions">
+                <button class="suggestion-btn" onclick="askQuestion(this.textContent)">
+                    What are the typical steps in a tax deed sale process?
+                </button>
+                <button class="suggestion-btn" onclick="askQuestion(this.textContent)">
+                    What is the difference between a tax deed and a tax lien?
+                </button>
+                <button class="suggestion-btn" onclick="askQuestion(this.textContent)">
+                    What are redemption rights in property tax sales?
+                </button>
+                <button class="suggestion-btn" onclick="askQuestion(this.textContent)">
+                    What legal documents are needed for a property tax sale?
+                </button>
+            </div>
+        </div>
+        
+        <div class="chat-section">
+            <h2>Chat with WilburAI</h2>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message assistant">
+                    <div class="message-bubble">
+                        Hello! I'm WilburAI, your legal assistant for property tax sales. I can help answer questions about tax deeds, tax liens, redemption rights, legal processes, and more. What would you like to know?
+                    </div>
+                    <div class="message-time" id="initialTime"></div>
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <div class="chat-input-wrapper">
+                    <textarea 
+                        id="chatInput" 
+                        class="chat-input" 
+                        placeholder="Ask a legal question about property tax sales..."
+                        rows="1"
+                    ></textarea>
+                </div>
+                <button class="chat-send-btn" id="chatSendBtn" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.hostname === 'localhost' 
+            ? window.location.origin 
+            : 'https://psa-core-api.onrender.com';
+
+        // Check if user is logged in
+        const acctId = localStorage.getItem('acct_id');
+        if (!acctId) {
+            window.location.href = '/';
+        }
+
+        // Set initial timestamp
+        document.getElementById('initialTime').textContent = new Date().toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit'
+        });
+
+        function logout() {
+            localStorage.removeItem('acct_id');
+            window.location.href = '/';
+        }
+
+        function askQuestion(question) {
+            const input = document.getElementById('chatInput');
+            input.value = question;
+            input.focus();
+            // Auto-send the question
+            sendMessage();
+        }
+
+        function addMessage(text, isUser = false) {
+            const messagesDiv = document.getElementById('chatMessages');
+            
+            // Remove typing indicator if present
+            const typingIndicator = messagesDiv.querySelector('.typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            // Use textContent for user messages to prevent XSS, but allow HTML for assistant responses
+            if (isUser) {
+                bubble.textContent = text;
+            } else {
+                // Assistant responses may contain formatting, but should be sanitized by the backend
+                bubble.innerHTML = text;
+            }
+            
+            const time = document.createElement('div');
+            time.className = 'message-time';
+            time.textContent = new Date().toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit'
+            });
+            
+            messageDiv.appendChild(bubble);
+            messageDiv.appendChild(time);
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const messagesDiv = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator active';
+            typingDiv.innerHTML = `
+                <div class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            `;
+            messagesDiv.appendChild(typingDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const sendBtn = document.getElementById('chatSendBtn');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            addMessage(message, true);
+            input.value = '';
+            input.style.height = 'auto';
+            sendBtn.disabled = true;
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/wilbur`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        message,
+                        acct_id: acctId 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addMessage(data.response);
+                } else {
+                    addMessage('Sorry, I encountered an error processing your request. Please try again.');
+                }
+            } catch (error) {
+                console.error('Chat error:', error);
+                addMessage('Sorry, I couldn\'t connect to the server. Please try again later.');
+            } finally {
+                sendBtn.disabled = false;
+                input.focus();
+            }
+        }
+
+        // Auto-resize textarea
+        const chatInput = document.getElementById('chatInput');
+        chatInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        // Handle keyboard shortcuts
+        chatInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Auto-focus on page load
+        window.addEventListener('load', () => {
+            chatInput.focus();
+        });
+    </script>
+</body>
+</html>

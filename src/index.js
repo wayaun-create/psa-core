@@ -320,6 +320,122 @@ Answer the user's question about their parcels. Be concise and helpful. Use HTML
   }
 });
 
+app.post("/api/wilbur", async (req, res) => {
+  const { message, acct_id } = req.body;
+  
+  if (!message || !acct_id) {
+    return res.status(400).json({ 
+      success: false, 
+      error: "Message and account ID are required" 
+    });
+  }
+  
+  // Check if OpenAI API key is configured
+  if (!process.env.OPENAI_API_KEY) {
+    console.log('WilburAI: OPENAI_API_KEY is missing');
+    return res.json({ 
+      success: true, 
+      response: "WilburAI requires an OPENAI_API_KEY environment variable to be configured. Please contact your administrator to enable this feature."
+    });
+  }
+  
+  // Check if OpenAI Assistant ID is configured
+  if (!process.env.OPENAI_ASSISTANT_ID) {
+    console.log('WilburAI: OPENAI_ASSISTANT_ID is missing');
+    return res.json({ 
+      success: true, 
+      response: "WilburAI requires an OPENAI_ASSISTANT_ID environment variable to be configured. Please contact your administrator to enable this feature."
+    });
+  }
+  
+  try {
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
+    });
+
+    // Create a new thread for this conversation
+    const thread = await openai.beta.threads.create();
+    
+    // Add the user's message to the thread
+    await openai.beta.threads.messages.create(thread.id, {
+      role: "user",
+      content: message
+    });
+    
+    // Run the assistant
+    const run = await openai.beta.threads.runs.create(thread.id, {
+      assistant_id: process.env.OPENAI_ASSISTANT_ID
+    });
+    
+    // Poll for completion (max 30 attempts with 1 second intervals)
+    let runStatus = run;
+    let attempts = 0;
+    const maxAttempts = 30;
+    
+    while (attempts < maxAttempts) {
+      runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+      
+      if (runStatus.status === 'completed') {
+        break;
+      } else if (runStatus.status === 'failed') {
+        console.error('WilburAI run failed:', runStatus.last_error);
+        return res.json({
+          success: true,
+          response: "I apologize, but I encountered an error processing your request. Please try rephrasing your question or try again later."
+        });
+      } else if (runStatus.status === 'cancelled') {
+        return res.json({
+          success: true,
+          response: "The request was cancelled. Please try again."
+        });
+      } else if (runStatus.status === 'expired') {
+        return res.json({
+          success: true,
+          response: "The request timed out. Please try again with a simpler question."
+        });
+      }
+      
+      // Wait 1 second before checking again
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      attempts++;
+    }
+    
+    if (runStatus.status !== 'completed') {
+      return res.json({
+        success: true,
+        response: "I'm taking longer than expected to respond. Please try again or ask a simpler question."
+      });
+    }
+    
+    // Get the assistant's messages
+    const messages = await openai.beta.threads.messages.list(thread.id);
+    
+    // Find the assistant's response (the first assistant message after the user's message)
+    const assistantMessage = messages.data.find(msg => msg.role === 'assistant');
+    
+    if (!assistantMessage || !assistantMessage.content || assistantMessage.content.length === 0) {
+      return res.json({
+        success: true,
+        response: "I apologize, but I couldn't generate a response. Please try asking your question differently."
+      });
+    }
+    
+    // Extract text content from the message
+    const textContent = assistantMessage.content.find(content => content.type === 'text');
+    const aiResponse = textContent ? textContent.text.value : "I apologize, but I couldn't generate a proper response.";
+    
+    res.json({ success: true, response: aiResponse });
+  } catch (e) {
+    console.error('WilburAI error:', e);
+    
+    // Fallback response
+    res.json({ 
+      success: true, 
+      response: "I'm experiencing technical difficulties at the moment. Please try again later. If the problem persists, please contact support."
+    });
+  }
+});
+
 const port = process.env.PORT || 3000;
 
 // Only start server if not in Vercel environment
