@@ -380,13 +380,22 @@ app.post("/api/wilbur", async (req, res) => {
     });
     console.log('Run created - Type:', typeof run, 'Keys:', Object.keys(run), 'ID:', run?.id, 'Thread ID:', run?.thread_id);
     
+    if (!run || !run.id) {
+      console.error('Run creation failed:', run);
+      throw new Error('Failed to create run - no run ID returned');
+    }
+    
+    const runId = run.id;
+    console.log('Polling for run completion - threadId:', threadId, 'runId:', runId);
+    
     // Poll for completion (max 30 attempts with 1 second intervals)
     let runStatus = run;
     let attempts = 0;
     const maxAttempts = 30;
     
     while (attempts < maxAttempts) {
-      runStatus = await openai.beta.threads.runs.retrieve(threadId, run.id);
+      console.log(`Attempt ${attempts + 1}: Retrieving run status with threadId=${threadId}, runId=${runId}`);
+      runStatus = await openai.beta.threads.runs.retrieve(threadId, runId);
       
       if (runStatus.status === 'completed') {
         break;
