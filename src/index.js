@@ -355,17 +355,25 @@ app.post("/api/wilbur", async (req, res) => {
 
     // Create a new thread for this conversation
     const thread = await openai.beta.threads.create();
+    console.log('Thread created:', { id: thread?.id, full: thread });
+    
+    if (!thread || !thread.id) {
+      throw new Error('Failed to create thread - no thread ID returned');
+    }
+    
+    const threadId = thread.id;
     
     // Add the user's message to the thread
-    await openai.beta.threads.messages.create(thread.id, {
+    await openai.beta.threads.messages.create(threadId, {
       role: "user",
       content: message
     });
     
     // Run the assistant
-    const run = await openai.beta.threads.runs.create(thread.id, {
+    const run = await openai.beta.threads.runs.create(threadId, {
       assistant_id: process.env.OPENAI_ASSISTANT_ID
     });
+    console.log('Run created:', { id: run?.id, threadId: threadId });
     
     // Poll for completion (max 30 attempts with 1 second intervals)
     let runStatus = run;
@@ -373,7 +381,7 @@ app.post("/api/wilbur", async (req, res) => {
     const maxAttempts = 30;
     
     while (attempts < maxAttempts) {
-      runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+      runStatus = await openai.beta.threads.runs.retrieve(threadId, run.id);
       
       if (runStatus.status === 'completed') {
         break;
@@ -408,7 +416,7 @@ app.post("/api/wilbur", async (req, res) => {
     }
     
     // Get the assistant's messages
-    const messages = await openai.beta.threads.messages.list(thread.id);
+    const messages = await openai.beta.threads.messages.list(threadId);
     
     // Find the assistant's response (the first assistant message after the user's message)
     const assistantMessage = messages.data.find(msg => msg.role === 'assistant');
