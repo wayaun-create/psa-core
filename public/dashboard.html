@@ -562,21 +562,18 @@
                 .join(' ');
         }
         
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
         function displayClientInfo(data) {
+            const clientInfoGrid = document.getElementById('clientInfoGrid');
+            clientInfoGrid.innerHTML = ''; // Clear existing content
+            
             if (!data) {
-                document.getElementById('clientInfoGrid').innerHTML = 
-                    '<p style="color: #6b7280;">No client information available</p>';
+                const p = document.createElement('p');
+                p.style.color = '#6b7280';
+                p.textContent = 'No client information available';
+                clientInfoGrid.appendChild(p);
                 return;
             }
             
-            const clientInfoGrid = document.getElementById('clientInfoGrid');
             const excludeFields = ['success', 'clientCount', 'taxSaleCount', 'parcelCount'];
             
             const fields = Object.entries(data)
@@ -586,18 +583,30 @@
                            value !== null && 
                            value !== '' && 
                            value !== undefined;
-                })
-                .map(([key, value]) => `
-                    <div class="client-info-item">
-                        <div class="client-info-label">${escapeHtml(formatFieldName(key))}</div>
-                        <div class="client-info-value">${escapeHtml(String(value))}</div>
-                    </div>
-                `);
+                });
             
             if (fields.length > 0) {
-                clientInfoGrid.innerHTML = fields.join('');
+                fields.forEach(([key, value]) => {
+                    const item = document.createElement('div');
+                    item.className = 'client-info-item';
+                    
+                    const label = document.createElement('div');
+                    label.className = 'client-info-label';
+                    label.textContent = formatFieldName(key);
+                    
+                    const valueDiv = document.createElement('div');
+                    valueDiv.className = 'client-info-value';
+                    valueDiv.textContent = String(value);
+                    
+                    item.appendChild(label);
+                    item.appendChild(valueDiv);
+                    clientInfoGrid.appendChild(item);
+                });
             } else {
-                clientInfoGrid.innerHTML = '<p style="color: #6b7280;">No client information available</p>';
+                const p = document.createElement('p');
+                p.style.color = '#6b7280';
+                p.textContent = 'No client information available';
+                clientInfoGrid.appendChild(p);
             }
         }
         
