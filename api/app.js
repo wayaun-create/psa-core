@@ -394,12 +394,5 @@ Important guidelines:
   }
 });
 
-const port = process.env.PORT || 3000;
-
-// Only start server if not in Vercel environment
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
-  app.listen(port, () => console.log(`Listening on ${port}`));
-}
-
-// Export for Vercel serverless
+// Export the Express app for use by index.js (Render)
 module.exports = app;
