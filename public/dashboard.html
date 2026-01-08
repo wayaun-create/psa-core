@@ -630,6 +630,24 @@
             document.getElementById('completedTab').classList.toggle('active', tab === 'completed');
         }
 
+        function createEmptyState(icon, text) {
+            const container = document.createElement('div');
+            container.className = 'empty-state';
+            
+            const iconDiv = document.createElement('div');
+            iconDiv.className = 'empty-state-icon';
+            iconDiv.textContent = icon;
+            
+            const textDiv = document.createElement('div');
+            textDiv.className = 'empty-state-text';
+            textDiv.textContent = text;
+            
+            container.appendChild(iconDiv);
+            container.appendChild(textDiv);
+            
+            return container;
+        }
+        
         async function loadTaxSales() {
             try {
                 const response = await fetch(`${API_BASE}/api/tax-sales/${acctId}`);
@@ -658,12 +676,8 @@
                             activeTaxSaleList.appendChild(createTaxSaleButton(ts, false));
                         });
                     } else {
-                        activeTaxSaleList.innerHTML = `
-                            <div class="empty-state">
-                                <div class="empty-state-icon">📋</div>
-                                <div class="empty-state-text">No active tax sales</div>
-                            </div>
-                        `;
+                        activeTaxSaleList.innerHTML = '';
+                        activeTaxSaleList.appendChild(createEmptyState('📋', 'No active tax sales'));
                     }
                     
                     // Render completed tax sales
@@ -673,26 +687,14 @@
                             completedTaxSaleList.appendChild(createTaxSaleButton(ts, true));
                         });
                     } else {
-                        completedTaxSaleList.innerHTML = `
-                            <div class="empty-state">
-                                <div class="empty-state-icon">✅</div>
-                                <div class="empty-state-text">No completed tax sales</div>
-                            </div>
-                        `;
+                        completedTaxSaleList.innerHTML = '';
+                        completedTaxSaleList.appendChild(createEmptyState('✅', 'No completed tax sales'));
                     }
                 } else {
-                    activeTaxSaleList.innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-state-icon">📋</div>
-                            <div class="empty-state-text">No active tax sales</div>
-                        </div>
-                    `;
-                    completedTaxSaleList.innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-state-icon">✅</div>
-                            <div class="empty-state-text">No completed tax sales</div>
-                        </div>
-                    `;
+                    activeTaxSaleList.innerHTML = '';
+                    activeTaxSaleList.appendChild(createEmptyState('📋', 'No active tax sales'));
+                    completedTaxSaleList.innerHTML = '';
+                    completedTaxSaleList.appendChild(createEmptyState('✅', 'No completed tax sales'));
                 }
             } catch (error) {
                 console.error('Error loading tax sales:', error);
