@@ -137,34 +137,45 @@
             line-height: 1.4;
         }
         
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+        .client-info-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             margin-top: 30px;
         }
         
-        .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            border-left: 4px solid #667eea;
+        .client-info-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #667eea;
         }
         
-        .stat-card h3 {
+        .client-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        
+        .client-info-item {
+            padding: 12px 0;
+        }
+        
+        .client-info-label {
             color: #6b7280;
-            font-size: 0.9rem;
-            font-weight: 500;
-            margin-bottom: 10px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 4px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
         
-        .stat-card .value {
+        .client-info-value {
             color: #111827;
-            font-size: 2rem;
-            font-weight: 700;
+            font-size: 1rem;
+            font-weight: 500;
         }
         
         .section {
@@ -179,6 +190,43 @@
             color: #333;
             margin-bottom: 20px;
             font-size: 1.5rem;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            color: #6b7280;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+        
+        .tab:hover {
+            color: #667eea;
+        }
+        
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
         }
         
         .tax-sale-list {
@@ -225,6 +273,25 @@
         .tax-sale-arrow {
             color: #667eea;
             font-size: 1.5rem;
+        }
+        
+        .tax-sale-btn.completed {
+            border-left-color: #10b981;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6b7280;
+        }
+        
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+        
+        .empty-state-text {
+            font-size: 1.1rem;
         }
         
         .chat-widget {
@@ -397,25 +464,28 @@
             </div>
         </div>
         
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>Total Clients</h3>
-                <div class="value" id="clientCount">-</div>
-            </div>
-            <div class="stat-card">
-                <h3>Active Tax Sales</h3>
-                <div class="value" id="taxSaleCount">-</div>
-            </div>
-            <div class="stat-card">
-                <h3>Total Parcels</h3>
-                <div class="value" id="parcelCount">-</div>
+        <div class="client-info-section">
+            <h2>Client Information</h2>
+            <div id="clientInfoGrid" class="client-info-grid">
+                <p style="color: #6b7280;">Loading client information...</p>
             </div>
         </div>
         
         <div class="section">
             <h2>Tax Sales</h2>
-            <div id="taxSaleList" class="tax-sale-list">
-                <p style="color: #6b7280;">Loading tax sales...</p>
+            <div class="tabs">
+                <button class="tab active" data-tab="active" onclick="switchTab('active')">Active Tax Sales</button>
+                <button class="tab" data-tab="completed" onclick="switchTab('completed')">Completed Tax Sales</button>
+            </div>
+            <div id="activeTab" class="tab-content active">
+                <div id="activeTaxSaleList" class="tax-sale-list">
+                    <p style="color: #6b7280;">Loading tax sales...</p>
+                </div>
+            </div>
+            <div id="completedTab" class="tab-content">
+                <div id="completedTaxSaleList" class="tax-sale-list">
+                    <p style="color: #6b7280;">Loading tax sales...</p>
+                </div>
             </div>
         </div>
     </div>
@@ -469,9 +539,9 @@
                 if (data.success) {
                     document.getElementById('userInfo').textContent = 
                         `Logged in as: ${data.email || acctId}`;
-                    document.getElementById('clientCount').textContent = data.clientCount || 0;
-                    document.getElementById('taxSaleCount').textContent = data.taxSaleCount || 0;
-                    document.getElementById('parcelCount').textContent = data.parcelCount || 0;
+                    
+                    // Display client information dynamically
+                    displayClientInfo(data);
                 } else {
                     logout();
                 }
@@ -482,36 +552,192 @@
                 console.error('Error loading dashboard:', error);
             }
         }
+        
+        function formatFieldName(fieldName) {
+            // Convert snake_case to Title Case
+            if (!fieldName) return '';
+            return fieldName
+                .split('_')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        }
+        
+        function displayClientInfo(data) {
+            const clientInfoGrid = document.getElementById('clientInfoGrid');
+            clientInfoGrid.innerHTML = ''; // Clear existing content
+            
+            if (!data) {
+                const p = document.createElement('p');
+                p.style.color = '#6b7280';
+                p.textContent = 'No client information available';
+                clientInfoGrid.appendChild(p);
+                return;
+            }
+            
+            const excludeFields = ['success', 'clientCount', 'taxSaleCount', 'parcelCount'];
+            
+            const fields = Object.entries(data)
+                .filter(([key, value]) => {
+                    // Exclude specific fields and null/empty values
+                    return !excludeFields.includes(key) && 
+                           value !== null && 
+                           value !== '' && 
+                           value !== undefined;
+                });
+            
+            if (fields.length > 0) {
+                fields.forEach(([key, value]) => {
+                    const item = document.createElement('div');
+                    item.className = 'client-info-item';
+                    
+                    const label = document.createElement('div');
+                    label.className = 'client-info-label';
+                    label.textContent = formatFieldName(key);
+                    
+                    const valueDiv = document.createElement('div');
+                    valueDiv.className = 'client-info-value';
+                    valueDiv.textContent = String(value);
+                    
+                    item.appendChild(label);
+                    item.appendChild(valueDiv);
+                    clientInfoGrid.appendChild(item);
+                });
+            } else {
+                const p = document.createElement('p');
+                p.style.color = '#6b7280';
+                p.textContent = 'No client information available';
+                clientInfoGrid.appendChild(p);
+            }
+        }
+        
+        function switchTab(tab) {
+            // Update tab buttons using data attributes
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(t => {
+                if (t.dataset.tab === tab) {
+                    t.classList.add('active');
+                } else {
+                    t.classList.remove('active');
+                }
+            });
+            
+            // Update tab content
+            document.getElementById('activeTab').classList.toggle('active', tab === 'active');
+            document.getElementById('completedTab').classList.toggle('active', tab === 'completed');
+        }
+        
+        const COMPLETED_STATUS = 'completed';
 
+        function createEmptyState(icon, text) {
+            const container = document.createElement('div');
+            container.className = 'empty-state';
+            
+            const iconDiv = document.createElement('div');
+            iconDiv.className = 'empty-state-icon';
+            iconDiv.textContent = icon;
+            
+            const textDiv = document.createElement('div');
+            textDiv.className = 'empty-state-text';
+            textDiv.textContent = text;
+            
+            container.appendChild(iconDiv);
+            container.appendChild(textDiv);
+            
+            return container;
+        }
+        
         async function loadTaxSales() {
             try {
                 const response = await fetch(`${API_BASE}/api/tax-sales/${acctId}`);
                 const data = await response.json();
                 
-                const taxSaleList = document.getElementById('taxSaleList');
+                const activeTaxSaleList = document.getElementById('activeTaxSaleList');
+                const completedTaxSaleList = document.getElementById('completedTaxSaleList');
                 
                 if (data.success && data.taxSales.length > 0) {
-                    taxSaleList.innerHTML = data.taxSales.map(ts => `
-                        <button class="tax-sale-btn" onclick="viewParcels('${ts.tax_sale_id}', '${ts.tax_sale_name || 'Tax Sale'}')">
-                            <div class="tax-sale-info">
-                                <div class="tax-sale-name">${ts.tax_sale_name || 'Untitled Tax Sale'}</div>
-                                <div class="tax-sale-meta">
-                                    ${ts.sale_date ? new Date(ts.sale_date).toLocaleDateString() : 'No date'} 
-                                    ${ts.county ? '• ' + ts.county : ''}
-                                    ${ts.status ? '• ' + ts.status : ''}
-                                </div>
-                            </div>
-                            <div class="tax-sale-arrow">→</div>
-                        </button>
-                    `).join('');
+                    // Separate active and completed tax sales in a single iteration
+                    const activeTaxSales = [];
+                    const completedTaxSales = [];
+                    
+                    data.taxSales.forEach(ts => {
+                        if (ts.status && ts.status.toLowerCase() === COMPLETED_STATUS) {
+                            completedTaxSales.push(ts);
+                        } else {
+                            activeTaxSales.push(ts);
+                        }
+                    });
+                    
+                    // Render active tax sales
+                    if (activeTaxSales.length > 0) {
+                        activeTaxSaleList.innerHTML = '';
+                        activeTaxSales.forEach(ts => {
+                            activeTaxSaleList.appendChild(createTaxSaleButton(ts, false));
+                        });
+                    } else {
+                        activeTaxSaleList.innerHTML = '';
+                        activeTaxSaleList.appendChild(createEmptyState('📋', 'No active tax sales'));
+                    }
+                    
+                    // Render completed tax sales
+                    if (completedTaxSales.length > 0) {
+                        completedTaxSaleList.innerHTML = '';
+                        completedTaxSales.forEach(ts => {
+                            completedTaxSaleList.appendChild(createTaxSaleButton(ts, true));
+                        });
+                    } else {
+                        completedTaxSaleList.innerHTML = '';
+                        completedTaxSaleList.appendChild(createEmptyState('✅', 'No completed tax sales'));
+                    }
                 } else {
-                    taxSaleList.innerHTML = '<p style="color: #6b7280;">No tax sales found</p>';
+                    activeTaxSaleList.innerHTML = '';
+                    activeTaxSaleList.appendChild(createEmptyState('📋', 'No active tax sales'));
+                    completedTaxSaleList.innerHTML = '';
+                    completedTaxSaleList.appendChild(createEmptyState('✅', 'No completed tax sales'));
                 }
             } catch (error) {
                 console.error('Error loading tax sales:', error);
-                document.getElementById('taxSaleList').innerHTML = 
+                document.getElementById('activeTaxSaleList').innerHTML = 
+                    '<p style="color: #ef4444;">Error loading tax sales</p>';
+                document.getElementById('completedTaxSaleList').innerHTML = 
                     '<p style="color: #ef4444;">Error loading tax sales</p>';
             }
+        }
+        
+        function createTaxSaleButton(ts, isCompleted) {
+            const button = document.createElement('button');
+            button.className = isCompleted ? 'tax-sale-btn completed' : 'tax-sale-btn';
+            button.onclick = () => viewParcels(ts.tax_sale_id, ts.tax_sale_name || 'Tax Sale');
+            
+            const info = document.createElement('div');
+            info.className = 'tax-sale-info';
+            
+            const name = document.createElement('div');
+            name.className = 'tax-sale-name';
+            name.textContent = ts.tax_sale_name || 'Untitled Tax Sale';
+            
+            const meta = document.createElement('div');
+            meta.className = 'tax-sale-meta';
+            const metaParts = [];
+            if (ts.sale_date) {
+                metaParts.push(new Date(ts.sale_date).toLocaleDateString());
+            } else {
+                metaParts.push('No date');
+            }
+            if (ts.county) metaParts.push('• ' + ts.county);
+            if (ts.status) metaParts.push('• ' + ts.status);
+            meta.textContent = metaParts.join(' ');
+            
+            info.appendChild(name);
+            info.appendChild(meta);
+            
+            const arrow = document.createElement('div');
+            arrow.className = 'tax-sale-arrow';
+            arrow.textContent = '→';
+            
+            button.appendChild(info);
+            button.appendChild(arrow);
+            
+            return button;
         }
 
         function viewParcels(taxSaleId, taxSaleName) {
