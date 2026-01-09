@@ -185,6 +185,13 @@ app.get("/api/tax-sales/:acctId", async (req, res) => {
       [acctId]
     );
     
+    // Log status values for debugging
+    console.log('Tax sales for account', acctId, ':', result.rows.map(ts => ({ 
+      id: ts.tax_sale_id, 
+      name: ts.tax_sale_name, 
+      status: ts.status 
+    })));
+    
     res.json({ success: true, taxSales: result.rows });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });

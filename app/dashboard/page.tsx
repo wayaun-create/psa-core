@@ -71,8 +71,17 @@ export default function Dashboard() {
       const data = await response.json()
 
       if (data.success) {
-        const active = data.taxSales.filter((ts: TaxSale) => ts.status?.toLowerCase() !== 'completed')
-        const completed = data.taxSales.filter((ts: TaxSale) => ts.status?.toLowerCase() === 'completed')
+        console.log('Tax sales received:', data.taxSales)
+        // Filter based on status - handle various status formats
+        const active = data.taxSales.filter((ts: TaxSale) => {
+          const status = ts.status?.toLowerCase()?.trim()
+          return status !== 'completed' && status !== 'complete' && status !== 'closed'
+        })
+        const completed = data.taxSales.filter((ts: TaxSale) => {
+          const status = ts.status?.toLowerCase()?.trim()
+          return status === 'completed' || status === 'complete' || status === 'closed'
+        })
+        console.log('Active tax sales:', active.length, 'Completed:', completed.length)
         setActiveTaxSales(active)
         setCompletedTaxSales(completed)
       }
