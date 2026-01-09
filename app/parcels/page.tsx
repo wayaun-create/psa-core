@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import ChatWidget from '../components/ChatWidget'
@@ -12,7 +12,7 @@ interface Parcel {
   def: string
 }
 
-export default function Parcels() {
+function ParcelsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const taxSaleId = searchParams.get('taxSaleId')
@@ -107,5 +107,17 @@ export default function Parcels() {
 
       <ChatWidget initialMessage="Hi! I can help you find information about your parcels. Try asking me things like: • How many parcels are in Butts County? • Show me parcels with defendant John Smith" />
     </div>
+  )
+}
+
+export default function Parcels() {
+  return (
+    <Suspense fallback={
+      <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif', background: '#f3f4f6', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div>Loading...</div>
+      </div>
+    }>
+      <ParcelsContent />
+    </Suspense>
   )
 }

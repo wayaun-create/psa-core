@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import ChatWidget from '../components/ChatWidget'
 
@@ -8,7 +8,7 @@ interface ParcelData {
   [key: string]: any
 }
 
-export default function ParcelDetail() {
+function ParcelDetailContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const parcelId = searchParams.get('parcelId')
@@ -229,5 +229,17 @@ export default function ParcelDetail() {
 
       <ChatWidget />
     </div>
+  )
+}
+
+export default function ParcelDetail() {
+  return (
+    <Suspense fallback={
+      <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif', background: '#f3f4f6', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div>Loading...</div>
+      </div>
+    }>
+      <ParcelDetailContent />
+    </Suspense>
   )
 }

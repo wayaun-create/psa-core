@@ -3,3 +3,13 @@ node_modules/
 .env.local
 .DS_Store
 *.log
+
+# Next.js
+.next/
+out/
+build/
+.vercel/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
