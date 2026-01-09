@@ -1,8 +1,8 @@
 {
   "name": "psa-core",
   "version": "1.0.0",
-  "description": "This project uses direct SQL only. No Prisma, no ORM, no migrations.",
-  "main": "index.js",
+  "description": "PSA Core - Next.js Application",
+  "private": true,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/wayaun-create/psa-core.git"
@@ -10,7 +10,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "bugs": {
     "url": "https://github.com/wayaun-create/psa-core/issues"
   },
@@ -18,22 +17,27 @@
   "engines": {
     "node": ">=18.x"
   },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.7",
     "ai": "^6.0.14",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
-    "express": "^4.18.2",
+    "next": "14.2.18",
     "openai": "^6.15.0",
-    "pg": "^8.16.3"
+    "pg": "^8.16.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.11"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node api/index.js",
-    "dev": "nodemon api/index.js",
-    "worker": "node worker/index.js"
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "typescript": "^5"
   }
 }
