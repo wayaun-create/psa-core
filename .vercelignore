@@ -11,6 +11,4 @@ check-orphaned.js
 inspect-schema.js
 migrate-foreign-keys.js
 render.yaml
-README.md
-public/
 DEPLOYMENT.md
