@@ -73,6 +73,39 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
+app.get("/api/account/:acctId", async (req, res) => {
+  if (!pool) {
+    return res.status(503).json({ 
+      success: false, 
+      error: "Database not configured" 
+    });
+  }
+  
+  const { acctId } = req.params;
+  
+  try {
+    // Get the first client associated with this account
+    const clientResult = await pool.query(
+      "SELECT client_id, client_name, email, phone, business_type FROM clients WHERE acct_id = $1 LIMIT 1",
+      [acctId]
+    );
+    
+    if (clientResult.rows.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: "No client found for this account" 
+      });
+    }
+    
+    res.json({
+      success: true,
+      client: clientResult.rows[0]
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 app.get("/api/dashboard/:acctId", async (req, res) => {
   if (!pool) {
     return res.status(503).json({ 
