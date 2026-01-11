@@ -19,9 +19,7 @@ export default function ChatWidget({ initialMessage = "Hi! I can help you find i
   ])
   const [loading, setLoading] = useState(false)
 
-  const API_BASE = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-    ? window.location.origin
-    : 'https://psa-core-api.onrender.com'
+  const API_BASE = typeof window !== 'undefined' ? window.location.origin : ''
 
   const sendMessage = async () => {
     if (!input.trim()) return
