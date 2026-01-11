@@ -392,9 +392,7 @@
     </div>
 
     <script>
-        const API_BASE = window.location.hostname === 'localhost' 
-            ? window.location.origin 
-            : 'https://psa-core-api.onrender.com';
+        const API_BASE = window.location.origin;
 
         const urlParams = new URLSearchParams(window.location.search);
         const parcelId = urlParams.get('parcelId');

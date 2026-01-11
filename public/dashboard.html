@@ -515,9 +515,7 @@
     </div>
 
     <script>
-        const API_BASE = window.location.hostname === 'localhost' 
-            ? window.location.origin 
-            : 'https://psa-core-api.onrender.com';
+        const API_BASE = window.location.origin;
 
         // Check if user is logged in
         const acctId = localStorage.getItem('acct_id');

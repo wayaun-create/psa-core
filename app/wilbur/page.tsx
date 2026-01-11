@@ -25,9 +25,7 @@ export default function Wilbur() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  const API_BASE = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-    ? window.location.origin
-    : 'https://psa-core-api.onrender.com'
+  const API_BASE = typeof window !== 'undefined' ? window.location.origin : ''
 
   useEffect(() => {
     const acctId = localStorage.getItem('acct_id')

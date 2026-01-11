@@ -16,9 +16,7 @@ function ParcelDetailContent() {
   const [parcel, setParcel] = useState<ParcelData | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const API_BASE = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-    ? window.location.origin
-    : 'https://psa-core-api.onrender.com'
+  const API_BASE = typeof window !== 'undefined' ? window.location.origin : ''
 
   useEffect(() => {
     if (!parcelId) {

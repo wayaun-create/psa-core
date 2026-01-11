@@ -10,9 +10,7 @@ export default function Home() {
   const [alert, setAlert] = useState<{ message: string; type: 'error' | 'success' } | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const API_BASE = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-    ? window.location.origin
-    : 'https://psa-core-api.onrender.com'
+  const API_BASE = typeof window !== 'undefined' ? window.location.origin : ''
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
